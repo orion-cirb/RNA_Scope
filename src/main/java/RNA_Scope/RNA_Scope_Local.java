@@ -91,24 +91,26 @@ public class RNA_Scope_Local implements PlugIn {
                     if (2 * removeSlice < sizeZ)
                         options.setZEnd(0, sizeZ-1  - removeSlice);
                     options.setZStep(0, 1);
-
                     options.setQuiet(true);
 
                     /*
                     * Open Channel 1 (gene reference)
                     */
-                    int channelIndex = ArrayUtils.indexOf(chs, channels.get(1));
+                    int channelIndex = ArrayUtils.indexOf(chs, channels.get(1)) + 1;
+                    String imgChName = imagesFolder + File.separatorChar+rootName + "_w" + channelIndex + channels.get(1)+ ".TIF";
+                    
                     System.out.println("-- Opening gene reference channel : "+ channels.get(1));
-                    ImagePlus imgGeneRef = BF.openImagePlus(options)[channelIndex];
-
+                    ImagePlus imgGeneRef = IJ.openImage(imgChName);
+                    imgGeneRef.setCalibration(cal);
+                    
                     /*
                     * Open Channel 3 (gene X)
                     */
-                    channelIndex = ArrayUtils.indexOf(chs, channels.get(2));
+                    channelIndex = ArrayUtils.indexOf(chs, channels.get(2)) + 1;
+                    imgChName = imagesFolder + File.separatorChar+rootName + "_w" + channelIndex + channels.get(2)+ ".TIF";
                     System.out.println("-- Opening gene X channel : " + channels.get(2));
-                    ImagePlus imgGeneX = BF.openImagePlus(options)[channelIndex];
-
-
+                    ImagePlus imgGeneX = IJ.openImage(imgChName);
+                    imgGeneX.setCalibration(cal);
 
                     Roi roiGeneRef = null, roiGeneX = null;
 
@@ -156,10 +158,12 @@ public class RNA_Scope_Local implements PlugIn {
                     /*
                     * Open DAPI channel
                     */
-                    channelIndex = ArrayUtils.indexOf(chs, channels.get(0));
+                    channelIndex = ArrayUtils.indexOf(chs, channels.get(0)) + 1;
+                    imgChName = imagesFolder + File.separator + rootName + "_w" + channelIndex+ channels.get(0)+ ".TIF";
                     System.out.println("-- Opening Nucleus channel : "+ channels.get(0));
-                    ImagePlus imgNuc = BF.openImagePlus(options)[channelIndex];
-
+                    ImagePlus imgNuc = IJ.openImage(imgChName);
+                    imgNuc.setCalibration(cal);
+                    
                     // if no dilatation find cells with cellOutliner on gene reference image
                     // else dilate nucleus
 
