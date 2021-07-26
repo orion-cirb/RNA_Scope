@@ -41,7 +41,7 @@ public class RNA_Scope_Main implements PlugIn {
     public static float nucDil = 3;
     public static int removeSlice = 0;
     public static boolean nucNumber = true;
-    
+    public static String segMethod = "StarDist";
        
     /**
      * 

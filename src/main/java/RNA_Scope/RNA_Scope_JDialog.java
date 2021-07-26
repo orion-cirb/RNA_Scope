@@ -68,6 +68,7 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
     public static String selectedDataset;
     public static boolean connectSuccess = false;
     
+    private String[] segMethods = {"Classical","StarDist"};
     private String[] autoThresholdMethods = AutoThresholder.getMethods();
     private String[] autoBackgroundMethods = {"From rois", "Auto", "From calibration"};
     public Calibration cal = new Calibration();
@@ -175,6 +176,7 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
         jLabelImagesFolder = new javax.swing.JLabel();
         jTextFieldImagesFolder = new javax.swing.JTextField();
         jButtonBrowse = new javax.swing.JButton();
+        jLabel2 = new javax.swing.JLabel();
         jPanelOmero = new javax.swing.JPanel();
         jLabelUser = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -194,6 +196,7 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
         jComboBoxDatasets = new javax.swing.JComboBox<>();
         jTextFieldUserID = new javax.swing.JTextField();
         jLabelImages = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
         jPanelParameters = new javax.swing.JPanel();
         jFormattedTextFieldNucDil = new javax.swing.JFormattedTextField();
         jFormattedTextFieldSecToRemove = new javax.swing.JFormattedTextField();
@@ -236,12 +239,16 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
         jFormattedTextFieldCalibZ = new javax.swing.JFormattedTextField();
         jLabelCSpatialCalib = new javax.swing.JLabel();
         jCheckBoxNumberNucleus = new javax.swing.JCheckBox();
+        jLabelSegMethod = new javax.swing.JLabel();
+        jComboBoxSegMethod = new javax.swing.JComboBox(segMethods);
         jButtonOk = new javax.swing.JToggleButton();
         jButtonCancel = new javax.swing.JToggleButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Parameters");
         setResizable(false);
+
+        jTabbedPaneRNA_Scope.setToolTipText("");
 
         jLabelImagesFolder.setText("Images folder : ");
 
@@ -252,28 +259,37 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
             }
         });
 
+        jLabel2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Orion_icon.png"))); // NOI18N
+
         javax.swing.GroupLayout jPanelLocalLayout = new javax.swing.GroupLayout(jPanelLocal);
         jPanelLocal.setLayout(jPanelLocalLayout);
         jPanelLocalLayout.setHorizontalGroup(
             jPanelLocalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelLocalLayout.createSequentialGroup()
-                .addGap(24, 24, 24)
-                .addComponent(jLabelImagesFolder)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTextFieldImagesFolder, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(57, 57, 57)
-                .addComponent(jButtonBrowse)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(jPanelLocalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelLocalLayout.createSequentialGroup()
+                        .addGap(22, 22, 22)
+                        .addComponent(jLabelImagesFolder)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldImagesFolder, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(57, 57, 57)
+                        .addComponent(jButtonBrowse))
+                    .addGroup(jPanelLocalLayout.createSequentialGroup()
+                        .addGap(290, 290, 290)
+                        .addComponent(jLabel2)))
+                .addContainerGap(237, Short.MAX_VALUE))
         );
         jPanelLocalLayout.setVerticalGroup(
             jPanelLocalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelLocalLayout.createSequentialGroup()
-                .addGap(47, 47, 47)
+                .addContainerGap()
+                .addComponent(jLabel2)
+                .addGap(46, 46, 46)
                 .addGroup(jPanelLocalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabelImagesFolder)
                     .addComponent(jTextFieldImagesFolder, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButtonBrowse))
-                .addContainerGap())
+                .addContainerGap(513, Short.MAX_VALUE))
         );
 
         jTabbedPaneRNA_Scope.addTab("Local images", jPanelLocal);
@@ -367,21 +383,42 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
 
         jLabelImages.setText("Images :");
 
+        jLabel3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Orion_icon.png"))); // NOI18N
+
         javax.swing.GroupLayout jPanelOmeroLayout = new javax.swing.GroupLayout(jPanelOmero);
         jPanelOmero.setLayout(jPanelOmeroLayout);
         jPanelOmeroLayout.setHorizontalGroup(
             jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelOmeroLayout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jButtonConnect)
+                .addGap(338, 338, 338))
             .addGroup(jPanelOmeroLayout.createSequentialGroup()
                 .addGroup(jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanelOmeroLayout.createSequentialGroup()
-                        .addGap(27, 27, 27)
-                        .addComponent(jLabelPassword)
-                        .addGap(282, 282, 282)
-                        .addComponent(jButtonConnect))
+                        .addGap(12, 12, 12)
+                        .addGroup(jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabelPort, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabelUser, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabelPassword, javax.swing.GroupLayout.Alignment.TRAILING))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jTextFieldServerName, javax.swing.GroupLayout.PREFERRED_SIZE, 290, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTextFieldPort, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTextFieldUserID, javax.swing.GroupLayout.PREFERRED_SIZE, 211, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jPasswordField, javax.swing.GroupLayout.PREFERRED_SIZE, 211, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(jPanelOmeroLayout.createSequentialGroup()
+                        .addGap(12, 12, 12)
+                        .addGroup(jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabelImages)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 578, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(jPanelOmeroLayout.createSequentialGroup()
+                        .addGap(212, 212, 212)
+                        .addComponent(jLabel8))
                     .addGroup(jPanelOmeroLayout.createSequentialGroup()
                         .addContainerGap()
                         .addGroup(jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabelImages, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jLabelDatasets, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jLabelProjects, javax.swing.GroupLayout.Alignment.TRAILING))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -389,61 +426,42 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
                             .addComponent(jComboBoxProjects, javax.swing.GroupLayout.Alignment.LEADING, 0, 327, Short.MAX_VALUE)
                             .addComponent(jComboBoxDatasets, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addGroup(jPanelOmeroLayout.createSequentialGroup()
-                        .addGap(12, 12, 12)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 578, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanelOmeroLayout.createSequentialGroup()
-                        .addGap(212, 212, 212)
-                        .addComponent(jLabel8))
-                    .addGroup(jPanelOmeroLayout.createSequentialGroup()
-                        .addGap(8, 8, 8)
-                        .addGroup(jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabelPort, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabelUser, javax.swing.GroupLayout.Alignment.TRAILING))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jTextFieldServerName, javax.swing.GroupLayout.PREFERRED_SIZE, 290, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jTextFieldUserID, javax.swing.GroupLayout.PREFERRED_SIZE, 211, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jPasswordField, javax.swing.GroupLayout.PREFERRED_SIZE, 211, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jTextFieldPort, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanelOmeroLayout.createSequentialGroup()
                         .addGap(72, 72, 72)
-                        .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 424, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(216, Short.MAX_VALUE))
+                        .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 582, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelOmeroLayout.createSequentialGroup()
+                        .addGap(322, 322, 322)
+                        .addComponent(jLabel3)))
+                .addContainerGap(152, Short.MAX_VALUE))
         );
         jPanelOmeroLayout.setVerticalGroup(
             jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelOmeroLayout.createSequentialGroup()
-                .addGap(21, 21, 21)
-                .addGroup(jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanelOmeroLayout.createSequentialGroup()
-                        .addGap(8, 8, 8)
-                        .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(jLabel3)
+                .addGap(38, 38, 38)
+                .addGroup(jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jTextFieldServerName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jTextFieldPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabelPort))
                 .addGroup(jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanelOmeroLayout.createSequentialGroup()
-                        .addGap(8, 8, 8)
-                        .addComponent(jLabelPort, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(jTextFieldPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanelOmeroLayout.createSequentialGroup()
-                        .addGap(8, 8, 8)
-                        .addComponent(jLabelUser, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(jTextFieldUserID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGroup(jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanelOmeroLayout.createSequentialGroup()
-                        .addGap(8, 8, 8)
-                        .addComponent(jButtonConnect))
-                    .addGroup(jPanelOmeroLayout.createSequentialGroup()
+                        .addGroup(jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jTextFieldUserID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelUser, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jPasswordField)
                             .addComponent(jLabelPassword, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGap(30, 30, 30)))
-                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 9, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGap(62, 62, 62))
+                    .addGroup(jPanelOmeroLayout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButtonConnect)
+                        .addGap(28, 28, 28)))
+                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 3, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel8)
                 .addGap(26, 26, 26)
                 .addGroup(jPanelOmeroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -457,7 +475,7 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
                 .addComponent(jLabelImages)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(17, 17, 17))
+                .addGap(45, 45, 45))
         );
 
         jTextFieldServerName.setText("omero.college-de-france.fr");
@@ -531,7 +549,7 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
 
         jLabelDAPICh.setText("DAPI :");
 
-        jLabelSingleDotsCalib.setFont(new java.awt.Font("Cantarell", 3, 15)); // NOI18N
+        jLabelSingleDotsCalib.setFont(new java.awt.Font("Ubuntu", 3, 15)); // NOI18N
         jLabelSingleDotsCalib.setText("Single dot calibration");
 
         jComboBoxDAPICh.setForeground(new java.awt.Color(0, 0, 0));
@@ -717,35 +735,61 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
             }
         });
 
+        jLabelSegMethod.setText("Detection :");
+
+        jComboBoxSegMethod.setForeground(java.awt.Color.black);
+        jComboBoxSegMethod.setToolTipText("Select nucleus detection Classical or StarDist method");
+        jComboBoxSegMethod.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                jComboBoxSegMethodItemStateChanged(evt);
+            }
+        });
+        jComboBoxSegMethod.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jComboBoxSegMethodActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelParametersLayout = new javax.swing.GroupLayout(jPanelParameters);
         jPanelParameters.setLayout(jPanelParametersLayout);
         jPanelParametersLayout.setHorizontalGroup(
             jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelParametersLayout.createSequentialGroup()
-                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelParametersLayout.createSequentialGroup()
-                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addContainerGap()
+                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanelParametersLayout.createSequentialGroup()
+                        .addComponent(jLabelChannels)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanelParametersLayout.createSequentialGroup()
+                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabelSingleDotsCalib)
                             .addGroup(jPanelParametersLayout.createSequentialGroup()
-                                .addGap(43, 43, 43)
-                                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addGroup(jPanelParametersLayout.createSequentialGroup()
-                                        .addGap(16, 16, 16)
-                                        .addComponent(jLabelGeneXCh)
+                                .addGap(17, 17, 17)
+                                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelParametersLayout.createSequentialGroup()
+                                        .addComponent(jLabelGeneRefSingleDotInt)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jComboBoxGeneXCh, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                    .addGroup(jPanelParametersLayout.createSequentialGroup()
-                                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                            .addComponent(jLabelDAPICh)
-                                            .addComponent(jLabelGeneRefCh))
-                                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addGroup(jPanelParametersLayout.createSequentialGroup()
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jComboBoxGeneRefCh, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                            .addGroup(jPanelParametersLayout.createSequentialGroup()
-                                                .addGap(6, 6, 6)
-                                                .addComponent(jComboBoxDAPICh, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))))
+                                        .addComponent(jFormattedTextFieldGeneRefSingleDotInt, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelParametersLayout.createSequentialGroup()
+                                        .addComponent(jLabelGeneXSingleDotInt)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jFormattedTextFieldGeneXSingleDotInt, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabelBgCalib)
                             .addGroup(jPanelParametersLayout.createSequentialGroup()
-                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabelCalibBgGeneRef, javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(jLabelCalibBgGeneX, javax.swing.GroupLayout.Alignment.TRAILING))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jFormattedTextFieldCalibBgGeneRef, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jFormattedTextFieldCalibBgGeneX, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addGap(62, 62, 62))
+                    .addGroup(jPanelParametersLayout.createSequentialGroup()
+                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanelParametersLayout.createSequentialGroup()
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                                     .addGroup(jPanelParametersLayout.createSequentialGroup()
                                         .addComponent(jLabelCalibX)
@@ -758,85 +802,60 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
                                     .addGroup(jPanelParametersLayout.createSequentialGroup()
                                         .addComponent(jLabelCalibZ)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jFormattedTextFieldCalibZ, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addGap(32, 32, 32)))
-                        .addGap(174, 174, 174))
-                    .addGroup(jPanelParametersLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jLabelChannels)
-                        .addGap(202, 202, 202)))
-                .addGap(416, 416, 416))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelParametersLayout.createSequentialGroup()
-                .addGap(23, 23, 23)
-                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelParametersLayout.createSequentialGroup()
-                        .addComponent(jLabelGeneRefSingleDotInt)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jFormattedTextFieldGeneRefSingleDotInt, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelParametersLayout.createSequentialGroup()
-                        .addComponent(jLabelGeneXSingleDotInt)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jFormattedTextFieldGeneXSingleDotInt, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanelParametersLayout.createSequentialGroup()
-                        .addComponent(jLabelSingleDotsCalib)
-                        .addGap(108, 108, 108)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanelParametersLayout.createSequentialGroup()
-                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabelBgCalib)
+                                        .addComponent(jFormattedTextFieldCalibZ, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addComponent(jLabelCSpatialCalib)
                             .addGroup(jPanelParametersLayout.createSequentialGroup()
                                 .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabelCalibBgGeneRef, javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addComponent(jLabelCalibBgGeneX, javax.swing.GroupLayout.Alignment.TRAILING))
+                                    .addComponent(jLabelDAPICh, javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(jLabelGeneRefCh, javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(jLabelGeneXCh, javax.swing.GroupLayout.Alignment.TRAILING))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jFormattedTextFieldCalibBgGeneRef, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(jFormattedTextFieldCalibBgGeneX, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                        .addContainerGap())
-                    .addGroup(jPanelParametersLayout.createSequentialGroup()
-                        .addGap(92, 92, 92)
+                                    .addComponent(jComboBoxDAPICh, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jComboBoxGeneRefCh, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jComboBoxGeneXCh, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                         .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanelParametersLayout.createSequentialGroup()
-                                .addComponent(jCheckBoxNumberNucleus)
-                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addGroup(jPanelParametersLayout.createSequentialGroup()
+                                .addGap(14, 14, 14)
                                 .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addComponent(jLabelThMethod)
-                                    .addComponent(jLabelMinVol)
-                                    .addComponent(jLabelMaxVol)
-                                    .addComponent(jLabelNucDil)
-                                    .addComponent(jLabelSecToRemove))
+                                    .addComponent(jLabelBgMethod)
+                                    .addComponent(jLabelBgRoiSize))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jComboBoxThMethod, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(jFormattedTextFieldMinVol, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(jFormattedTextFieldMaxVol, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(jFormattedTextFieldNucDil, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(jFormattedTextFieldSecToRemove, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))))
+                                    .addComponent(jComboBoxBgMethod, javax.swing.GroupLayout.PREFERRED_SIZE, 135, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jFormattedTextFieldBgRoiSize, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addGroup(jPanelParametersLayout.createSequentialGroup()
+                                .addGap(54, 54, 54)
+                                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelParametersLayout.createSequentialGroup()
+                                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(jLabelSegMethod, javax.swing.GroupLayout.Alignment.TRAILING)
+                                            .addComponent(jLabelThMethod, javax.swing.GroupLayout.Alignment.TRAILING))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(jFormattedTextFieldMinVol, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(jFormattedTextFieldMaxVol, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(jFormattedTextFieldNucDil, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(jFormattedTextFieldSecToRemove, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(jComboBoxThMethod, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(jComboBoxSegMethod, javax.swing.GroupLayout.PREFERRED_SIZE, 135, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                    .addGroup(jPanelParametersLayout.createSequentialGroup()
+                                        .addGap(33, 33, 33)
+                                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                            .addComponent(jLabelBg)
+                                            .addComponent(jCheckBoxNumberNucleus))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 62, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelParametersLayout.createSequentialGroup()
+                                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(jLabelSecToRemove, javax.swing.GroupLayout.Alignment.TRAILING)
+                                            .addComponent(jLabelNucDil, javax.swing.GroupLayout.Alignment.TRAILING)
+                                            .addComponent(jLabelMaxVol, javax.swing.GroupLayout.Alignment.TRAILING)
+                                            .addComponent(jLabelMinVol, javax.swing.GroupLayout.Alignment.TRAILING))
+                                        .addGap(152, 152, 152)))))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
             .addGroup(jPanelParametersLayout.createSequentialGroup()
-                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanelParametersLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jLabelCSpatialCalib))
-                    .addGroup(jPanelParametersLayout.createSequentialGroup()
-                        .addGap(389, 389, 389)
-                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabelBg)
-                            .addComponent(jLabelNucleus)))
-                    .addGroup(jPanelParametersLayout.createSequentialGroup()
-                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanelParametersLayout.createSequentialGroup()
-                                .addGap(405, 405, 405)
-                                .addComponent(jLabelBgRoiSize))
-                            .addGroup(jPanelParametersLayout.createSequentialGroup()
-                                .addGap(455, 455, 455)
-                                .addComponent(jLabelBgMethod)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jComboBoxBgMethod, javax.swing.GroupLayout.PREFERRED_SIZE, 135, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jFormattedTextFieldBgRoiSize, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addGap(389, 389, 389)
+                .addComponent(jLabelNucleus)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanelParametersLayout.setVerticalGroup(
@@ -846,21 +865,13 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
                 .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabelNucleus)
                     .addComponent(jLabelChannels))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanelParametersLayout.createSequentialGroup()
-                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabelDAPICh)
-                            .addComponent(jComboBoxDAPICh, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabelGeneRefCh)
-                            .addComponent(jComboBoxGeneRefCh, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabelGeneXCh)
-                            .addComponent(jComboBoxGeneXCh, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanelParametersLayout.createSequentialGroup()
+                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jComboBoxSegMethod, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelSegMethod))
+                        .addGap(7, 7, 7)
                         .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabelThMethod)
                             .addComponent(jComboBoxThMethod, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -871,66 +882,79 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabelMaxVol)
-                            .addComponent(jFormattedTextFieldMaxVol, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jFormattedTextFieldMaxVol, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(jPanelParametersLayout.createSequentialGroup()
+                        .addGap(20, 20, 20)
+                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabelDAPICh)
+                            .addComponent(jComboBoxDAPICh, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabelNucDil)
-                            .addComponent(jFormattedTextFieldNucDil, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jLabelGeneRefCh)
+                            .addComponent(jComboBoxGeneRefCh, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabelSecToRemove)
-                            .addComponent(jFormattedTextFieldSecToRemove, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addComponent(jLabelGeneXCh)
+                            .addComponent(jComboBoxGeneXCh, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabelNucDil)
+                    .addComponent(jFormattedTextFieldNucDil, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabelSecToRemove)
+                    .addComponent(jFormattedTextFieldSecToRemove, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jCheckBoxNumberNucleus)
-                .addGap(3, 3, 3)
-                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGap(74, 74, 74)
+                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelParametersLayout.createSequentialGroup()
+                        .addComponent(jLabelBg, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabelBgMethod)
+                            .addComponent(jComboBoxBgMethod, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jFormattedTextFieldBgRoiSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelBgRoiSize))
+                        .addGap(56, 56, 56)
+                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelParametersLayout.createSequentialGroup()
+                                .addComponent(jLabelSingleDotsCalib)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(jLabelGeneRefSingleDotInt)
+                                    .addComponent(jFormattedTextFieldGeneRefSingleDotInt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(jFormattedTextFieldGeneXSingleDotInt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabelGeneXSingleDotInt)))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelParametersLayout.createSequentialGroup()
+                                .addComponent(jLabelBgCalib)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(jFormattedTextFieldCalibBgGeneRef, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabelCalibBgGeneRef))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(jFormattedTextFieldCalibBgGeneX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabelCalibBgGeneX)))))
                     .addGroup(jPanelParametersLayout.createSequentialGroup()
                         .addComponent(jLabelCSpatialCalib)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanelParametersLayout.createSequentialGroup()
-                                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(jLabelCalibX)
-                                    .addComponent(jFormattedTextFieldCalibX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(jLabelCalibY)
-                                    .addComponent(jFormattedTextFieldCalibY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(jLabelCalibZ)
-                                    .addComponent(jFormattedTextFieldCalibZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addGroup(jPanelParametersLayout.createSequentialGroup()
-                                .addComponent(jLabelBg, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(jLabelBgMethod)
-                                    .addComponent(jComboBoxBgMethod, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(jFormattedTextFieldBgRoiSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(jLabelBgRoiSize))))
-                        .addGap(41, 41, 41)
-                        .addComponent(jLabelSingleDotsCalib)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabelGeneRefSingleDotInt)
-                            .addComponent(jFormattedTextFieldGeneRefSingleDotInt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jFormattedTextFieldGeneXSingleDotInt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabelGeneXSingleDotInt)))
-                    .addGroup(jPanelParametersLayout.createSequentialGroup()
-                        .addComponent(jLabelBgCalib)
+                            .addComponent(jLabelCalibX)
+                            .addComponent(jFormattedTextFieldCalibX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jFormattedTextFieldCalibBgGeneRef, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabelCalibBgGeneRef))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                            .addComponent(jLabelCalibY)
+                            .addComponent(jFormattedTextFieldCalibY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jFormattedTextFieldCalibBgGeneX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabelCalibBgGeneX))))
-                .addGap(109, 109, 109))
+                            .addComponent(jLabelCalibZ)
+                            .addComponent(jFormattedTextFieldCalibZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addContainerGap())
         );
 
         jFormattedTextFieldNucDil.setValue(rna.nucDil);
@@ -944,6 +968,7 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
         jComboBoxThMethod.setSelectedIndex(11);
         jFormattedTextFieldMinVol.setValue(rna.minNucVol);
         jFormattedTextFieldMaxVol.setValue(rna.maxNucVol);
+        jComboBoxBgMethod.setSelectedIndex(1);
 
         jTabbedPaneRNA_Scope.addTab("Parameters", jPanelParameters);
 
@@ -1161,150 +1186,6 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
         jButtonConnect.setEnabled(true);
     }//GEN-LAST:event_jTextFieldUserIDActionPerformed
 
-    private void jFormattedTextFieldNucDilActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldNucDilActionPerformed
-        // TODO add your handling code here:
-        rna.nucDil = ((Number)jFormattedTextFieldNucDil.getValue()).floatValue();
-    }//GEN-LAST:event_jFormattedTextFieldNucDilActionPerformed
-
-    private void jFormattedTextFieldNucDilPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldNucDilPropertyChange
-        // TODO add your handling code here:
-        rna.nucDil = ((Number)jFormattedTextFieldNucDil.getValue()).floatValue();
-    }//GEN-LAST:event_jFormattedTextFieldNucDilPropertyChange
-
-    private void jFormattedTextFieldSecToRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldSecToRemoveActionPerformed
-        // TODO add your handling code here:
-        rna.removeSlice = ((Number)jFormattedTextFieldSecToRemove.getValue()).intValue();
-    }//GEN-LAST:event_jFormattedTextFieldSecToRemoveActionPerformed
-
-    private void jFormattedTextFieldSecToRemovePropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldSecToRemovePropertyChange
-        // TODO add your handling code here:
-        rna.removeSlice = ((Number)jFormattedTextFieldSecToRemove.getValue()).intValue();
-    }//GEN-LAST:event_jFormattedTextFieldSecToRemovePropertyChange
-
-    private void jFormattedTextFieldGeneRefSingleDotIntActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldGeneRefSingleDotIntActionPerformed
-        // TODO add your handling code here:
-        rna.singleDotIntGeneRef = ((Number)jFormattedTextFieldGeneRefSingleDotInt.getValue()).doubleValue();
-    }//GEN-LAST:event_jFormattedTextFieldGeneRefSingleDotIntActionPerformed
-
-    private void jFormattedTextFieldGeneRefSingleDotIntPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldGeneRefSingleDotIntPropertyChange
-        // TODO add your handling code here:
-        rna.singleDotIntGeneRef = ((Number)jFormattedTextFieldGeneRefSingleDotInt.getValue()).doubleValue();
-    }//GEN-LAST:event_jFormattedTextFieldGeneRefSingleDotIntPropertyChange
-
-    private void jFormattedTextFieldGeneXSingleDotIntActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldGeneXSingleDotIntActionPerformed
-        // TODO add your handling code here:
-        rna.singleDotIntGeneX = ((Number)jFormattedTextFieldGeneXSingleDotInt.getValue()).doubleValue();
-    }//GEN-LAST:event_jFormattedTextFieldGeneXSingleDotIntActionPerformed
-
-    private void jFormattedTextFieldGeneXSingleDotIntPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldGeneXSingleDotIntPropertyChange
-        // TODO add your handling code here:
-        rna.singleDotIntGeneX = ((Number)jFormattedTextFieldGeneXSingleDotInt.getValue()).doubleValue();
-    }//GEN-LAST:event_jFormattedTextFieldGeneXSingleDotIntPropertyChange
-
-    private void jComboBoxBgMethodItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboBoxBgMethodItemStateChanged
-        // TODO add your handling code here:
-        rna.autoBackground = jComboBoxBgMethod.getSelectedItem().toString();
-        switch (jComboBoxBgMethod.getSelectedIndex()) {
-            case 0 : 
-                jFormattedTextFieldBgRoiSize.setEnabled(false);
-                jFormattedTextFieldCalibBgGeneRef.setEnabled(false);
-                jFormattedTextFieldCalibBgGeneX.setEnabled(false);
-                break;
-            case 1 :
-                jFormattedTextFieldBgRoiSize.setEnabled(true);
-                jFormattedTextFieldCalibBgGeneRef.setEnabled(false);
-                jFormattedTextFieldCalibBgGeneX.setEnabled(false);
-                break;
-            case 2 : 
-                jFormattedTextFieldBgRoiSize.setEnabled(true);
-                jFormattedTextFieldCalibBgGeneRef.setEnabled(true);
-                jFormattedTextFieldCalibBgGeneX.setEnabled(true);
-                break;
-        }
-    }//GEN-LAST:event_jComboBoxBgMethodItemStateChanged
-
-    private void jComboBoxBgMethodActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxBgMethodActionPerformed
-        // TODO add your handling code here:
-        rna.autoBackground = jComboBoxBgMethod.getSelectedItem().toString();
-        switch (jComboBoxBgMethod.getSelectedIndex()) {
-            case 0 : 
-                jFormattedTextFieldBgRoiSize.setEnabled(false);
-                jFormattedTextFieldCalibBgGeneRef.setEnabled(false);
-                jFormattedTextFieldCalibBgGeneX.setEnabled(false);
-                break;
-            case 1 :
-                jFormattedTextFieldBgRoiSize.setEnabled(true);
-                jFormattedTextFieldCalibBgGeneRef.setEnabled(false);
-                jFormattedTextFieldCalibBgGeneX.setEnabled(false);
-                break;
-            case 2 : 
-                jFormattedTextFieldBgRoiSize.setEnabled(true);
-                jFormattedTextFieldCalibBgGeneRef.setEnabled(true);
-                jFormattedTextFieldCalibBgGeneX.setEnabled(true);
-                break;
-        }
-    }//GEN-LAST:event_jComboBoxBgMethodActionPerformed
-
-    private void jFormattedTextFieldBgRoiSizeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldBgRoiSizeActionPerformed
-        // TODO add your handling code here:
-        rna.roiBgSize = ((Number)jFormattedTextFieldBgRoiSize.getValue()).intValue();
-    }//GEN-LAST:event_jFormattedTextFieldBgRoiSizeActionPerformed
-
-    private void jFormattedTextFieldBgRoiSizePropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldBgRoiSizePropertyChange
-        // TODO add your handling code here:
-        rna.roiBgSize = ((Number)jFormattedTextFieldBgRoiSize.getValue()).intValue();
-    }//GEN-LAST:event_jFormattedTextFieldBgRoiSizePropertyChange
-
-    private void jFormattedTextFieldCalibBgGeneRefActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldCalibBgGeneRefActionPerformed
-        // TODO add your handling code here:
-        rna.calibBgGeneRef = ((Number)jFormattedTextFieldCalibBgGeneRef.getValue()).doubleValue();
-    }//GEN-LAST:event_jFormattedTextFieldCalibBgGeneRefActionPerformed
-
-    private void jFormattedTextFieldCalibBgGeneRefPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldCalibBgGeneRefPropertyChange
-        // TODO add your handling code here:
-        rna.calibBgGeneRef = ((Number)jFormattedTextFieldCalibBgGeneRef.getValue()).doubleValue();
-    }//GEN-LAST:event_jFormattedTextFieldCalibBgGeneRefPropertyChange
-
-    private void jFormattedTextFieldCalibBgGeneXActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldCalibBgGeneXActionPerformed
-        // TODO add your handling code here:
-        rna.calibBgGeneX = ((Number)jFormattedTextFieldCalibBgGeneX.getValue()).doubleValue();
-    }//GEN-LAST:event_jFormattedTextFieldCalibBgGeneXActionPerformed
-
-    private void jFormattedTextFieldCalibBgGeneXPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldCalibBgGeneXPropertyChange
-        // TODO add your handling code here:
-        rna.calibBgGeneX = ((Number)jFormattedTextFieldCalibBgGeneX.getValue()).doubleValue();
-    }//GEN-LAST:event_jFormattedTextFieldCalibBgGeneXPropertyChange
-
-    private void jComboBoxThMethodItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboBoxThMethodItemStateChanged
-        // TODO add your handling code here:
-        rna.thMethod = jComboBoxThMethod.getSelectedItem().toString();
-    }//GEN-LAST:event_jComboBoxThMethodItemStateChanged
-
-    private void jComboBoxThMethodActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxThMethodActionPerformed
-        // TODO add your handling code here:
-        rna.thMethod = jComboBoxThMethod.getSelectedItem().toString();
-    }//GEN-LAST:event_jComboBoxThMethodActionPerformed
-
-    private void jFormattedTextFieldMinVolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldMinVolActionPerformed
-        // TODO add your handling code here:
-        rna.minNucVol = ((Number)jFormattedTextFieldMinVol.getValue()).intValue();
-    }//GEN-LAST:event_jFormattedTextFieldMinVolActionPerformed
-
-    private void jFormattedTextFieldMinVolPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldMinVolPropertyChange
-        // TODO add your handling code here:
-        rna.minNucVol = ((Number)jFormattedTextFieldMinVol.getValue()).intValue();
-    }//GEN-LAST:event_jFormattedTextFieldMinVolPropertyChange
-
-    private void jFormattedTextFieldMaxVolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldMaxVolActionPerformed
-        // TODO add your handling code here:
-        rna.maxNucVol = ((Number)jFormattedTextFieldMaxVol.getValue()).intValue();
-    }//GEN-LAST:event_jFormattedTextFieldMaxVolActionPerformed
-
-    private void jFormattedTextFieldMaxVolPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldMaxVolPropertyChange
-        // TODO add your handling code here:
-        rna.maxNucVol = ((Number)jFormattedTextFieldMaxVol.getValue()).intValue();
-    }//GEN-LAST:event_jFormattedTextFieldMaxVolPropertyChange
-
     private void jButtonCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCancelActionPerformed
         // TODO add your handling code here:
         this.dispose();
@@ -1317,35 +1198,43 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
         this.dispose();
     }//GEN-LAST:event_jButtonOkActionPerformed
 
-    private void jComboBoxDAPIChActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxDAPIChActionPerformed
+    private void jComboBoxSegMethodActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxSegMethodActionPerformed
         // TODO add your handling code here:
-        if (actionListener)
-            rna.channels.add(0, jComboBoxDAPICh.getSelectedItem().toString());
-    }//GEN-LAST:event_jComboBoxDAPIChActionPerformed
+        rna.segMethod = jComboBoxSegMethod.getSelectedItem().toString();
+        switch (jComboBoxSegMethod.getSelectedIndex()) {
+            case 0 :
+                jComboBoxThMethod.setEnabled(true);
+                jFormattedTextFieldMinVol.setEnabled(true);
+                jFormattedTextFieldMaxVol.setEnabled(true);
+                jFormattedTextFieldNucDil.setEnabled(true);
+            break;
+            case 1 :
+                jComboBoxThMethod.setEnabled(false);
+                jFormattedTextFieldMinVol.setEnabled(false);
+                jFormattedTextFieldMaxVol.setEnabled(false);
+                jFormattedTextFieldNucDil.setEnabled(false);
+            break;
+        }
+    }//GEN-LAST:event_jComboBoxSegMethodActionPerformed
 
-    private void jComboBoxGeneRefChActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxGeneRefChActionPerformed
+    private void jComboBoxSegMethodItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboBoxSegMethodItemStateChanged
         // TODO add your handling code here:
-        if (actionListener)
-            rna.channels.add(1, jComboBoxGeneRefCh.getSelectedItem().toString());
-    }//GEN-LAST:event_jComboBoxGeneRefChActionPerformed
-
-    private void jComboBoxGeneXChActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxGeneXChActionPerformed
-        // TODO add your handling code here:
-        if (actionListener)
-            rna.channels.add(2, jComboBoxGeneXCh.getSelectedItem().toString());
-    }//GEN-LAST:event_jComboBoxGeneXChActionPerformed
-
-    private void jFormattedTextFieldCalibZActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldCalibZActionPerformed
-        // TODO add your handling code here:
-        if (actionListener)
-            cal.pixelDepth = ((Number)jFormattedTextFieldCalibZ.getValue()).intValue();
-    }//GEN-LAST:event_jFormattedTextFieldCalibZActionPerformed
-
-    private void jFormattedTextFieldCalibZPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldCalibZPropertyChange
-        // TODO add your handling code here:
-        if (actionListener)
-            cal.pixelDepth = ((Number)jFormattedTextFieldCalibZ.getValue()).intValue();
-    }//GEN-LAST:event_jFormattedTextFieldCalibZPropertyChange
+        rna.segMethod = jComboBoxSegMethod.getSelectedItem().toString();
+        switch (jComboBoxSegMethod.getSelectedIndex()) {
+            case 0 :
+                jComboBoxThMethod.setEnabled(true);
+                jFormattedTextFieldMinVol.setEnabled(true);
+                jFormattedTextFieldMaxVol.setEnabled(true);
+                jFormattedTextFieldNucDil.setEnabled(true);
+            break;
+            case 1 :
+                jComboBoxThMethod.setEnabled(false);
+                jFormattedTextFieldMinVol.setEnabled(false);
+                jFormattedTextFieldMaxVol.setEnabled(false);
+                jFormattedTextFieldNucDil.setEnabled(false);
+            break;
+        }
+    }//GEN-LAST:event_jComboBoxSegMethodItemStateChanged
 
     private void jCheckBoxNumberNucleusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxNumberNucleusActionPerformed
         // TODO add your handling code here:
@@ -1356,6 +1245,180 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
         // TODO add your handling code here:
         rna.nucNumber = jCheckBoxNumberNucleus.isSelected();
     }//GEN-LAST:event_jCheckBoxNumberNucleusItemStateChanged
+
+    private void jFormattedTextFieldCalibZPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldCalibZPropertyChange
+        // TODO add your handling code here:
+        if (actionListener)
+        cal.pixelDepth = ((Number)jFormattedTextFieldCalibZ.getValue()).intValue();
+    }//GEN-LAST:event_jFormattedTextFieldCalibZPropertyChange
+
+    private void jFormattedTextFieldCalibZActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldCalibZActionPerformed
+        // TODO add your handling code here:
+        if (actionListener)
+        cal.pixelDepth = ((Number)jFormattedTextFieldCalibZ.getValue()).intValue();
+    }//GEN-LAST:event_jFormattedTextFieldCalibZActionPerformed
+
+    private void jFormattedTextFieldMaxVolPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldMaxVolPropertyChange
+        // TODO add your handling code here:
+        rna.maxNucVol = ((Number)jFormattedTextFieldMaxVol.getValue()).intValue();
+    }//GEN-LAST:event_jFormattedTextFieldMaxVolPropertyChange
+
+    private void jFormattedTextFieldMaxVolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldMaxVolActionPerformed
+        // TODO add your handling code here:
+        rna.maxNucVol = ((Number)jFormattedTextFieldMaxVol.getValue()).intValue();
+    }//GEN-LAST:event_jFormattedTextFieldMaxVolActionPerformed
+
+    private void jFormattedTextFieldMinVolPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldMinVolPropertyChange
+        // TODO add your handling code here:
+        rna.minNucVol = ((Number)jFormattedTextFieldMinVol.getValue()).intValue();
+    }//GEN-LAST:event_jFormattedTextFieldMinVolPropertyChange
+
+    private void jFormattedTextFieldMinVolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldMinVolActionPerformed
+        // TODO add your handling code here:
+        rna.minNucVol = ((Number)jFormattedTextFieldMinVol.getValue()).intValue();
+    }//GEN-LAST:event_jFormattedTextFieldMinVolActionPerformed
+
+    private void jComboBoxThMethodActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxThMethodActionPerformed
+        // TODO add your handling code here:
+        rna.thMethod = jComboBoxThMethod.getSelectedItem().toString();
+    }//GEN-LAST:event_jComboBoxThMethodActionPerformed
+
+    private void jComboBoxThMethodItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboBoxThMethodItemStateChanged
+        // TODO add your handling code here:
+        rna.thMethod = jComboBoxThMethod.getSelectedItem().toString();
+    }//GEN-LAST:event_jComboBoxThMethodItemStateChanged
+
+    private void jFormattedTextFieldCalibBgGeneXPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldCalibBgGeneXPropertyChange
+        // TODO add your handling code here:
+        rna.calibBgGeneX = ((Number)jFormattedTextFieldCalibBgGeneX.getValue()).doubleValue();
+    }//GEN-LAST:event_jFormattedTextFieldCalibBgGeneXPropertyChange
+
+    private void jFormattedTextFieldCalibBgGeneXActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldCalibBgGeneXActionPerformed
+        // TODO add your handling code here:
+        rna.calibBgGeneX = ((Number)jFormattedTextFieldCalibBgGeneX.getValue()).doubleValue();
+    }//GEN-LAST:event_jFormattedTextFieldCalibBgGeneXActionPerformed
+
+    private void jFormattedTextFieldCalibBgGeneRefPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldCalibBgGeneRefPropertyChange
+        // TODO add your handling code here:
+        rna.calibBgGeneRef = ((Number)jFormattedTextFieldCalibBgGeneRef.getValue()).doubleValue();
+    }//GEN-LAST:event_jFormattedTextFieldCalibBgGeneRefPropertyChange
+
+    private void jFormattedTextFieldCalibBgGeneRefActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldCalibBgGeneRefActionPerformed
+        // TODO add your handling code here:
+        rna.calibBgGeneRef = ((Number)jFormattedTextFieldCalibBgGeneRef.getValue()).doubleValue();
+    }//GEN-LAST:event_jFormattedTextFieldCalibBgGeneRefActionPerformed
+
+    private void jComboBoxGeneXChActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxGeneXChActionPerformed
+        // TODO add your handling code here:
+        if (actionListener)
+        rna.channels.add(2, jComboBoxGeneXCh.getSelectedItem().toString());
+    }//GEN-LAST:event_jComboBoxGeneXChActionPerformed
+
+    private void jFormattedTextFieldBgRoiSizePropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldBgRoiSizePropertyChange
+        // TODO add your handling code here:
+        rna.roiBgSize = ((Number)jFormattedTextFieldBgRoiSize.getValue()).intValue();
+    }//GEN-LAST:event_jFormattedTextFieldBgRoiSizePropertyChange
+
+    private void jFormattedTextFieldBgRoiSizeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldBgRoiSizeActionPerformed
+        // TODO add your handling code here:
+        rna.roiBgSize = ((Number)jFormattedTextFieldBgRoiSize.getValue()).intValue();
+    }//GEN-LAST:event_jFormattedTextFieldBgRoiSizeActionPerformed
+
+    private void jComboBoxGeneRefChActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxGeneRefChActionPerformed
+        // TODO add your handling code here:
+        if (actionListener)
+        rna.channels.add(1, jComboBoxGeneRefCh.getSelectedItem().toString());
+    }//GEN-LAST:event_jComboBoxGeneRefChActionPerformed
+
+    private void jComboBoxBgMethodActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxBgMethodActionPerformed
+        // TODO add your handling code here:
+        rna.autoBackground = jComboBoxBgMethod.getSelectedItem().toString();
+        switch (jComboBoxBgMethod.getSelectedIndex()) {
+            case 0 :
+            jFormattedTextFieldBgRoiSize.setEnabled(false);
+            jFormattedTextFieldCalibBgGeneRef.setEnabled(false);
+            jFormattedTextFieldCalibBgGeneX.setEnabled(false);
+            break;
+            case 1 :
+            jFormattedTextFieldBgRoiSize.setEnabled(true);
+            jFormattedTextFieldCalibBgGeneRef.setEnabled(false);
+            jFormattedTextFieldCalibBgGeneX.setEnabled(false);
+            break;
+            case 2 :
+            jFormattedTextFieldBgRoiSize.setEnabled(true);
+            jFormattedTextFieldCalibBgGeneRef.setEnabled(true);
+            jFormattedTextFieldCalibBgGeneX.setEnabled(true);
+            break;
+        }
+    }//GEN-LAST:event_jComboBoxBgMethodActionPerformed
+
+    private void jComboBoxBgMethodItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboBoxBgMethodItemStateChanged
+        // TODO add your handling code here:
+        rna.autoBackground = jComboBoxBgMethod.getSelectedItem().toString();
+        switch (jComboBoxBgMethod.getSelectedIndex()) {
+            case 0 :
+            jFormattedTextFieldBgRoiSize.setEnabled(false);
+            jFormattedTextFieldCalibBgGeneRef.setEnabled(false);
+            jFormattedTextFieldCalibBgGeneX.setEnabled(false);
+            break;
+            case 1 :
+            jFormattedTextFieldBgRoiSize.setEnabled(true);
+            jFormattedTextFieldCalibBgGeneRef.setEnabled(false);
+            jFormattedTextFieldCalibBgGeneX.setEnabled(false);
+            break;
+            case 2 :
+            jFormattedTextFieldBgRoiSize.setEnabled(true);
+            jFormattedTextFieldCalibBgGeneRef.setEnabled(true);
+            jFormattedTextFieldCalibBgGeneX.setEnabled(true);
+            break;
+        }
+    }//GEN-LAST:event_jComboBoxBgMethodItemStateChanged
+
+    private void jComboBoxDAPIChActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxDAPIChActionPerformed
+        // TODO add your handling code here:
+        if (actionListener)
+        rna.channels.add(0, jComboBoxDAPICh.getSelectedItem().toString());
+    }//GEN-LAST:event_jComboBoxDAPIChActionPerformed
+
+    private void jFormattedTextFieldGeneXSingleDotIntPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldGeneXSingleDotIntPropertyChange
+        // TODO add your handling code here:
+        rna.singleDotIntGeneX = ((Number)jFormattedTextFieldGeneXSingleDotInt.getValue()).doubleValue();
+    }//GEN-LAST:event_jFormattedTextFieldGeneXSingleDotIntPropertyChange
+
+    private void jFormattedTextFieldGeneXSingleDotIntActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldGeneXSingleDotIntActionPerformed
+        // TODO add your handling code here:
+        rna.singleDotIntGeneX = ((Number)jFormattedTextFieldGeneXSingleDotInt.getValue()).doubleValue();
+    }//GEN-LAST:event_jFormattedTextFieldGeneXSingleDotIntActionPerformed
+
+    private void jFormattedTextFieldGeneRefSingleDotIntPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldGeneRefSingleDotIntPropertyChange
+        // TODO add your handling code here:
+        rna.singleDotIntGeneRef = ((Number)jFormattedTextFieldGeneRefSingleDotInt.getValue()).doubleValue();
+    }//GEN-LAST:event_jFormattedTextFieldGeneRefSingleDotIntPropertyChange
+
+    private void jFormattedTextFieldGeneRefSingleDotIntActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldGeneRefSingleDotIntActionPerformed
+        // TODO add your handling code here:
+        rna.singleDotIntGeneRef = ((Number)jFormattedTextFieldGeneRefSingleDotInt.getValue()).doubleValue();
+    }//GEN-LAST:event_jFormattedTextFieldGeneRefSingleDotIntActionPerformed
+
+    private void jFormattedTextFieldSecToRemovePropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldSecToRemovePropertyChange
+        // TODO add your handling code here:
+        rna.removeSlice = ((Number)jFormattedTextFieldSecToRemove.getValue()).intValue();
+    }//GEN-LAST:event_jFormattedTextFieldSecToRemovePropertyChange
+
+    private void jFormattedTextFieldSecToRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldSecToRemoveActionPerformed
+        // TODO add your handling code here:
+        rna.removeSlice = ((Number)jFormattedTextFieldSecToRemove.getValue()).intValue();
+    }//GEN-LAST:event_jFormattedTextFieldSecToRemoveActionPerformed
+
+    private void jFormattedTextFieldNucDilPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jFormattedTextFieldNucDilPropertyChange
+        // TODO add your handling code here:
+        rna.nucDil = ((Number)jFormattedTextFieldNucDil.getValue()).floatValue();
+    }//GEN-LAST:event_jFormattedTextFieldNucDilPropertyChange
+
+    private void jFormattedTextFieldNucDilActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFormattedTextFieldNucDilActionPerformed
+        // TODO add your handling code here:
+        rna.nucDil = ((Number)jFormattedTextFieldNucDil.getValue()).floatValue();
+    }//GEN-LAST:event_jFormattedTextFieldNucDilActionPerformed
 
     /**
      * @param args the command line arguments
@@ -1411,6 +1474,7 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
     private javax.swing.JComboBox jComboBoxGeneRefCh;
     private javax.swing.JComboBox jComboBoxGeneXCh;
     private javax.swing.JComboBox<String> jComboBoxProjects;
+    private javax.swing.JComboBox jComboBoxSegMethod;
     private javax.swing.JComboBox jComboBoxThMethod;
     private javax.swing.JFormattedTextField jFormattedTextFieldBgRoiSize;
     private javax.swing.JFormattedTextField jFormattedTextFieldCalibBgGeneRef;
@@ -1425,6 +1489,8 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
     private javax.swing.JFormattedTextField jFormattedTextFieldNucDil;
     private javax.swing.JFormattedTextField jFormattedTextFieldSecToRemove;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabelBg;
     private javax.swing.JLabel jLabelBgCalib;
@@ -1453,6 +1519,7 @@ public class RNA_Scope_JDialog extends javax.swing.JDialog {
     private javax.swing.JLabel jLabelPort;
     private javax.swing.JLabel jLabelProjects;
     private javax.swing.JLabel jLabelSecToRemove;
+    private javax.swing.JLabel jLabelSegMethod;
     private javax.swing.JLabel jLabelSingleDotsCalib;
     private javax.swing.JLabel jLabelThMethod;
     private javax.swing.JLabel jLabelUser;

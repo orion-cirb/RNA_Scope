@@ -9,15 +9,19 @@ import static RNA_Scope.RNA_Scope_Main.calibBgGeneX;
 import static RNA_Scope.RNA_Scope_Main.maxNucVol;
 import static RNA_Scope.RNA_Scope_Main.minNucVol;
 import static RNA_Scope.RNA_Scope_Main.nucDil;
+import static RNA_Scope.RNA_Scope_Main.nucNumber;
 import static RNA_Scope.RNA_Scope_Main.output_detail_Analyze;
 import static RNA_Scope.RNA_Scope_Main.roiBgSize;
 import static RNA_Scope.RNA_Scope_Main.singleDotIntGeneRef;
 import static RNA_Scope.RNA_Scope_Main.singleDotIntGeneX;
 import static RNA_Scope.RNA_Scope_Main.thMethod;
+import StardistOrion.StarDist2D;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.Prefs;
 import ij.gui.Roi;
+import ij.gui.WaitForUserDialog;
 import ij.io.FileSaver;
 import ij.measure.Calibration;
 import ij.measure.Measurements;
@@ -27,6 +31,7 @@ import ij.plugin.GaussianBlur3D;
 import ij.plugin.RGBStackMerge;
 import ij.plugin.filter.Analyzer;
 import ij.process.ImageProcessor;
+import ij.process.ImageStatistics;
 import java.awt.Font;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -68,7 +73,14 @@ public class RNA_Scope_Processing {
     public static CLIJ2 clij2 = CLIJ2.getInstance();
     private static double minDots = 0.5;
     private static double maxDots = 10;
-      
+    public static double stardistPercentileBottom = 0.2;
+    public static double stardistPercentileTop = 99.8;
+    public static double stardistProbThresh = 0.55;
+    public static double stardistOverlayThresh = 0.4;
+    public static double stardistProbThreshPML = 0.6;
+    public static double stardistOverlayThreshPML = 0.4;
+    public static String stardistModel = "dsb2018_heavy_augment.zip";
+    public static String stardistOutput = "Label Image";  
     
     /**
      *
@@ -112,9 +124,7 @@ public class RNA_Scope_Processing {
             roi.setLocation(0, 0);
             clearOutSide(imgLab, roi);
         }   
-        ImageInt labels = new ImageLabeller().getLabels(ImageHandler.wrap(imgLab));
-        labels.setCalibration(cal);
-        Objects3DPopulation pop = new Objects3DPopulation(labels);
+        Objects3DPopulation pop = new Objects3DPopulation(imgLab);
         Objects3DPopulation popFil = new Objects3DPopulation(pop.getObjectsWithinVolume(minDots, maxDots, true));
         pop = null;
         clij2.release(output);
@@ -249,7 +259,7 @@ public class RNA_Scope_Processing {
         //create image objects population
         Font tagFont = new Font("SansSerif", Font.PLAIN, 30);
         ImageHandler imgObj = ImageInt.wrap(img).createSameDimensions();
-        imgObj.setCalibration(img.getCalibration());
+        imgObj.setCalibration(cal);
         for (int i = 0; i < cellsPop.getNbObjects(); i++) {
             Object3D obj = cellsPop.getObject(i);
             obj.draw(imgObj, (i+1));
@@ -438,7 +448,62 @@ public class RNA_Scope_Processing {
         return(cellPop);
     }
     
+/** Look for all nuclei
+         Do z slice by slice stardist 
+         * return nuclei population
+         */
+        public static Objects3DPopulation stardistNucleiPop(ImagePlus imgNuc) throws IOException{
+            IJ.run(imgNuc, "Remove Outliers", "block_radius_x=40 block_radius_y=40 standard_deviations=1 stack");
+            // clear slices on which there is no signal before to stardist it (to do: add in stardist a test if image is empty ?)
+            clearSlicesWithoutSignal(imgNuc);
+            // Go StarDist
+            StarDist2D star = new StarDist2D();
+            star.loadInput(imgNuc);
+            star.setParams(stardistPercentileBottom, stardistPercentileTop, stardistProbThresh, stardistOverlayThresh, stardistModel, stardistOutput);
+            star.run();
+            // label in 3D
+            ImagePlus nuclei = star.associateLabels();
+            nuclei.setCalibration(cal);
+            ImageInt label3D = ImageInt.wrap(nuclei);
+            label3D.setCalibration(cal);
+            Objects3DPopulation nucPop = new Objects3DPopulation(label3D);
+            Objects3DPopulation nPop = new Objects3DPopulation(nucPop.getObjectsWithinVolume(minNucVol, maxNucVol, true));
+            closeImages(nuclei);
+            return(nPop);
+        }
+    
+        public static void clearSlicesWithoutSignal(ImagePlus imp) {
+            // try to get rid of extreme slices without nuclei
+            ImagePlus bin = new Duplicator().run(imp);
+            IJ.setAutoThreshold(bin, "Otsu dark stack");
+            Prefs.blackBackground = false;
+            IJ.run(bin, "Convert to Mask", "method=Otsu background=Dark stack");
 
+            bin.setSlice(bin.getNSlices()/2);
+            ImageStatistics stat = bin.getStatistics();
+            // threshold didn't work well, very few pixels found
+            if ( stat.mean < 10 ) {
+                closeImages(bin);
+                bin = new Duplicator().run(imp);
+                IJ.setAutoThreshold(bin, "Default dark stack");
+                Prefs.blackBackground = false;
+                IJ.run(bin, "Convert to Mask", "method=Default background=Dark stack");
+            }
+
+           for ( int i=1; i <= imp.getNSlices(); i++ )
+           {
+                bin.setSlice(i);
+                stat = bin.getStatistics();
+                // don't contain signal
+                if (stat.mean < 10)
+                {
+                    imp.setSlice(i);
+                    IJ.run(imp, "Select All", "");
+                    IJ.setBackgroundColor(0, 0, 0);
+                    IJ.run(imp, "Clear", "slice");
+                }
+            }
+        }
     
     
     private static ImagePlus WatershedSplit(ImagePlus binaryMask, float rad) {
@@ -610,42 +675,13 @@ public class RNA_Scope_Processing {
      * @param rootName
      */
     public static void saveCells (ImagePlus imgNuc, Objects3DPopulation cellsPop, String outDirResults, String rootName) {
-        ImagePlus imgColorPop = colorPop (cellsPop, imgNuc, false);
+        ImagePlus imgColorPop = colorPop (cellsPop, imgNuc, nucNumber);
         IJ.run(imgColorPop, "3-3-2 RGB", "");
         FileSaver ImgColorObjectsFile = new FileSaver(imgColorPop);
         ImgColorObjectsFile.saveAsTiff(outDirResults + rootName + "_Cells-ColorObjects.tif");
         closeImages(imgColorPop);
     }
-    
-    
-    /**
-     * save images objects population
-     * @param imgNuc
-     * @param cellsPop
-     * @param imgGeneRef
-     * @param imgGeneX
-     * @param outDirResults
-     * @param rootName
-     */
-    public static void saveCellsLabelledImage (ImagePlus imgNuc, Objects3DPopulation cellsPop, ImagePlus imgGeneRef, ImagePlus imgGeneX,
-            String outDirResults, String rootName) {
-        // red geneRef , green geneX, blue nucDilpop
-        ImageHandler imgCells = ImageHandler.wrap(imgNuc).createSameDimensions();
-        ImagePlus imgCellLabels = ImageHandler.wrap(imgNuc).createSameDimensions().getImagePlus();
-        // draw nucleus population
-        cellsPop.draw(imgCells, 255);
-        labelsObject(cellsPop, imgCellLabels, 24);
-        ImagePlus[] imgColors = {imgGeneRef, imgGeneX, imgCells.getImagePlus(), null, null, null, imgCellLabels};
-        ImagePlus imgObjects = new RGBStackMerge().mergeHyperstacks(imgColors, false);
-        imgObjects.setCalibration(cal);
-        IJ.run(imgObjects, "Enhance Contrast", "saturated=0.35");
 
-        // Save images
-        FileSaver ImgObjectsFile = new FileSaver(imgObjects);
-        ImgObjectsFile.saveAsTiff(outDirResults + rootName + "_Objects.tif");
-        imgCells.closeImagePlus();
-        closeImages(imgCellLabels);
-    }
     
     /**
      * save images objects population

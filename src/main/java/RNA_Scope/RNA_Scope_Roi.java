@@ -6,6 +6,7 @@ package RNA_Scope;
 
 
 
+import static RNA_Scope.RNA_Scope_Main.cal;
 import static RNA_Scope.RNA_Scope_Main.singleDotIntGeneRef;
 import static RNA_Scope.RNA_Scope_Main.singleDotIntGeneX;
 import static RNA_Scope_Utils.Image_Utils.findChannels;
@@ -66,7 +67,6 @@ public class RNA_Scope_Roi implements PlugIn {
 
 private String imageDir = "";
 private String outDirResults = "";
-private Calibration cal = new Calibration();   
 public final ImageIcon icon = new ImageIcon(this.getClass().getResource("/Orion_icon.png"));
 private String thMet = "Moments";
 

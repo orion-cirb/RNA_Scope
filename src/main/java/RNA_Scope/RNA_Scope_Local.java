@@ -10,7 +10,10 @@ import static RNA_Scope.RNA_Scope_Main.imagesFiles;
 import static RNA_Scope.RNA_Scope_Main.imagesFolder;
 import static RNA_Scope.RNA_Scope_Main.output_detail_Analyze;
 import static RNA_Scope.RNA_Scope_Main.removeSlice;
+import static RNA_Scope.RNA_Scope_Main.segMethod;
+import static RNA_Scope.RNA_Scope_Main.thMethod;
 import RNA_Scope_Utils.Cell;
+import RNA_Scope_Utils.Image_Utils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Roi;
@@ -41,9 +44,10 @@ import static RNA_Scope_Utils.RNA_Scope_Processing.findGenePop;
 import static RNA_Scope_Utils.RNA_Scope_Processing.findNucleus;
 import static RNA_Scope_Utils.RNA_Scope_Processing.findRoiBackgroundAuto;
 import static RNA_Scope_Utils.RNA_Scope_Processing.saveCells;
-import static RNA_Scope_Utils.RNA_Scope_Processing.saveCellsLabelledImage;
 import static RNA_Scope_Utils.RNA_Scope_Processing.saveDotsImage;
+import static RNA_Scope_Utils.RNA_Scope_Processing.stardistNucleiPop;
 import static RNA_Scope_Utils.RNA_Scope_Processing.tagsCells;
+import ij.gui.WaitForUserDialog;
 
 
 /**
@@ -79,8 +83,7 @@ public class RNA_Scope_Local implements PlugIn {
                     reader.setSeries(0);
                     int sizeC = reader.getSizeC();
                     int sizeZ = reader.getSizeZ();
-                    cal.pixelWidth = meta.getPixelsPhysicalSizeX(0).value().doubleValue();
-                    cal.pixelHeight = cal.pixelWidth;
+                    cal = Image_Utils.findImageCalib(meta);
                     String channelsID = meta.getImageName(0);
                     String[] chs = channelsID.replace("_", "-").split("/");
                     ImporterOptions options = new ImporterOptions();
@@ -146,6 +149,27 @@ public class RNA_Scope_Local implements PlugIn {
                             roiGeneX = null;
                             break;
                     }
+                     /*
+                    * Open DAPI channel
+                    */
+                    channelIndex = ArrayUtils.indexOf(chs, channels.get(0)) + 1;
+                    imgChName = imagesFolder + File.separator + rootName + "_w" + channelIndex+ channels.get(0)+ ".TIF";
+                    System.out.println("-- Opening Nucleus channel : "+ channels.get(0));
+                    ImagePlus imgNuc = IJ.openImage(imgChName);
+                    imgNuc.setCalibration(cal);
+                    imgNuc.deleteRoi();
+                    imgNuc.updateAndDraw();
+                    // if DeepL segmente nucleus with StarDist else find cells with cellOutliner
+                    // else dilate nucleus
+                    Objects3DPopulation cellsPop = new Objects3DPopulation();
+                    if (segMethod.equals("StarDist"))
+                        cellsPop = stardistNucleiPop(imgNuc);
+                    else
+                        cellsPop = findNucleus(imgNuc);
+                    
+                    System.out.println(cellsPop.getNbObjects()+"-- Nuclei found");
+                    // save random color nucleus popualation
+                    saveCells(imgNuc, cellsPop, outDirResults, rootName);
 
                     // Find gene reference dots
                     Objects3DPopulation geneRefDots = findGenePop(imgGeneRef, null, "Isodata");
@@ -155,20 +179,7 @@ public class RNA_Scope_Local implements PlugIn {
                     Objects3DPopulation geneXDots = findGenePop(imgGeneX, null, "Isodata");
                     System.out.println("Finding gene "+geneXDots.getNbObjects()+" X dots");
 
-                    /*
-                    * Open DAPI channel
-                    */
-                    channelIndex = ArrayUtils.indexOf(chs, channels.get(0)) + 1;
-                    imgChName = imagesFolder + File.separator + rootName + "_w" + channelIndex+ channels.get(0)+ ".TIF";
-                    System.out.println("-- Opening Nucleus channel : "+ channels.get(0));
-                    ImagePlus imgNuc = IJ.openImage(imgChName);
-                    imgNuc.setCalibration(cal);
                     
-                    // if no dilatation find cells with cellOutliner on gene reference image
-                    // else dilate nucleus
-
-                    Objects3DPopulation cellsPop = findNucleus(imgNuc);
-
                     // Find cells parameters in geneRef and geneX images
                     ArrayList<Cell> listCells = tagsCells(cellsPop, geneRefDots, geneXDots, imgGeneRef, imgGeneX, roiGeneRef, roiGeneX);
 
@@ -182,12 +193,6 @@ public class RNA_Scope_Local implements PlugIn {
 
                     }
                     
-                    // Save labelled nucleus
-                    saveCellsLabelledImage(imgNuc, cellsPop, imgGeneRef, imgGeneX, outDirResults, rootName);
-
-                    // save random color nucleus popualation
-                    saveCells(imgNuc, cellsPop, outDirResults, rootName);
-
                     // save dots segmented objects
                     saveDotsImage (imgNuc, cellsPop, geneRefDots, geneXDots, outDirResults, rootName);
 

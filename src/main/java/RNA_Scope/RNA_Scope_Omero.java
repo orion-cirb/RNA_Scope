@@ -28,7 +28,6 @@ import static RNA_Scope_Utils.RNA_Scope_Processing.findGenePop;
 import static RNA_Scope_Utils.RNA_Scope_Processing.findNucleus;
 import static RNA_Scope_Utils.RNA_Scope_Processing.findRoiBackgroundAuto;
 import static RNA_Scope_Utils.RNA_Scope_Processing.saveCells;
-import static RNA_Scope_Utils.RNA_Scope_Processing.saveCellsLabelledImage;
 import static RNA_Scope_Utils.RNA_Scope_Processing.saveDotsImage;
 import static RNA_Scope_Utils.RNA_Scope_Processing.tagsCells;
 import ij.IJ;
@@ -179,9 +178,6 @@ public class RNA_Scope_Omero implements PlugIn {
                             output_detail_Analyze.flush();                       
 
                         }
-
-                        // Save labelled nucleus
-                        saveCellsLabelledImage(imgNuc, cellsPop, imgGeneRef, imgGeneX, outDirResults, rootName);
 
                         // import  to Omero server
                         addImageToDataset(selectedProject, selectedDataset, outDirResults, rootName + "_Objects.tif", true);
