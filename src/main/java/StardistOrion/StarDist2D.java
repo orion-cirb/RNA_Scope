@@ -2,7 +2,6 @@ package StardistOrion;
 
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -16,14 +15,8 @@ import org.scijava.command.CommandModule;
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.gui.WaitForUserDialog;
 import ij.plugin.Concatenator;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import mcib3d.geom.Object3D;
 import mcib3d.geom.Objects3DPopulation;
 import mcib3d.image3d.ImageHandler;
@@ -31,14 +24,11 @@ import mcib3d.image3d.ImageInt;
 import mcib3d.tracking_dev.Association;
 import mcib3d.tracking_dev.AssociationPair;
 import mcib3d.tracking_dev.CostColocalisation;
-import mcib3d.tracking_dev.TrackingAssociation;
 import net.imagej.Dataset;
-import net.imagej.DatasetService;
 import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
-import net.imagej.legacy.convert.ImagePlusToDatasetConverter;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
@@ -64,7 +54,7 @@ public class StarDist2D extends StarDist2DBase implements Command {
     // ---------
 
     private File modelFile;
-    protected URL modelUrl = StarDist2D.class.getClassLoader().getResource("models/dsb2018_heavy_augment.zip");
+   
     private int nTiles = 1;
     private int excludeBoundary = 2;  // boundary_exclusion
     private String roiPosition = "Automatic";
@@ -73,14 +63,19 @@ public class StarDist2D extends StarDist2DBase implements Command {
     private boolean showCsbdeepProgress = false;
     private boolean showProbAndDist = false;
     private ImageJ ij;
+    private Object obj_;
+    private File tmpModelFile_ = null;
+    
     
     private int max = 0; // for association labels
     
-    public StarDist2D() {
+    public StarDist2D(Object obj, File tmpModelFile) {
          ij = new ImageJ();
          ij.launch();
         dataset = ij.dataset();
         command = ij.command();
+        obj_ = obj;
+        tmpModelFile_ = tmpModelFile;
     }
     
     private void checkForCSBDeep() {
@@ -119,7 +114,6 @@ public class StarDist2D extends StarDist2DBase implements Command {
         else
             roiPositionActive = roiPosition;
 
-        File tmpModelFile = null;
         try {
             final HashMap<String, Object> paramsCNN = new HashMap<>();
             paramsCNN.put("input", input);
@@ -132,10 +126,7 @@ public class StarDist2D extends StarDist2DBase implements Command {
             paramsCNN.put("overlap", 64);
             paramsCNN.put("batchSize", 1);
             paramsCNN.put("showProgressDialog", showCsbdeepProgress);
-            tmpModelFile = File.createTempFile("stardist_model_", ".zip");
-            Files.copy(modelUrl.openStream(), tmpModelFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            paramsCNN.put("modelFile", tmpModelFile);
-            
+            paramsCNN.put("modelFile", tmpModelFile_);  
             final HashMap<String, Object> paramsNMS = new HashMap<>();
             paramsNMS.put("probThresh", probThresh);
             paramsNMS.put("nmsThresh", nmsThresh);
@@ -158,9 +149,12 @@ public class StarDist2D extends StarDist2DBase implements Command {
                             Views.hyperSlice(inputImgPlus, inputTimeDim, t),
                             inputAxes.stream().filter(axis -> axis != Axes.TIME));
                     paramsCNN.put("input", inputFrameDS);
+                    final Dataset prediction;
+                    synchronized(obj_){
                     final Future<CommandModule> futureCNN = command.run(de.csbdresden.csbdeep.commands.GenericNetwork.class, false, paramsCNN);
-                    final Dataset prediction = (Dataset) futureCNN.get().getOutput("output");
-
+                    prediction = (Dataset) futureCNN.get().getOutput("output");
+                    }
+                    
                     final Pair<Dataset, Dataset> probAndDist = splitPrediction(prediction);
                     final Dataset probDS = probAndDist.getA();
                     final Dataset distDS = probAndDist.getB();
@@ -170,17 +164,14 @@ public class StarDist2D extends StarDist2DBase implements Command {
                     if (showProbAndDist) {
                         if (t==0) log.error(String.format("\"%s\" not implemented/supported for timelapse data.", "Show CNN Output"));
                     }
-
-                    final Future<CommandModule> futureNMS = command.run(StarDist2DNMS.class, false, paramsNMS);
-                    final Candidates polygons = (Candidates) futureNMS.get().getOutput("polygons");
+                    final Future<CommandModule> futureNMS = command.run(StarDist2DNMS.class, false, paramsNMS);  
+                    final Candidates polygons = (Candidates) futureNMS.get().getOutput("polygons");  
                     export(outputType, polygons, 1+t, numFrames, roiPositionActive);
-
-                    IJ.showProgress(1+t, (int)numFrames);
+                    //IJ.showProgress(1+t, (int)numFrames);
                 }
                 
                 label = labelImageToDataset(outputType);                
-                // if (roiManager != null) OverlayCommands.listRois(roiManager.getRoisAsArray());
-
+            
             } else {
                 // note: the code below supports timelapse data too. differences to above:
                 //       - joint normalization of all frames
@@ -202,22 +193,10 @@ public class StarDist2D extends StarDist2DBase implements Command {
 
                 final Future<CommandModule> futureNMS = command.run(StarDist2DNMS.class, false, paramsNMS);
                 label = (Dataset) futureNMS.get().getOutput("label");
-            }
-            // call at the end of the run() method
-            //CommandFromMacro.record(this, this.command);
-            
+            } 
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
-        } catch (IOException ex) {
-            Logger.getLogger(StarDist2D.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                if (tmpModelFile != null && tmpModelFile.exists())
-                    tmpModelFile.delete();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+        } 
     }
 
     // this function is very cumbersome... is there a better way to do this?
@@ -281,22 +260,13 @@ public class StarDist2D extends StarDist2DBase implements Command {
     }
     
     public void loadInput(ImagePlus imp) {
-        String modeldir = IJ.getDirectory("imagej")+"/models/";
         checkImageSize(imp);
-        imp.setDimensions(1, 1, imp.getNSlices());
+        if ( imp.getNSlices()>1) imp.setDimensions(1, 1, imp.getNSlices());
         final AxisType[] axes = new AxisType[]{Axes.X, Axes.Y, Axes.TIME};
         final Img inputImg = (Img) ImageJFunctions.wrap(imp);
         input = Utils.raiToDataset(dataset, "input", inputImg, axes);
-//         IJ.saveAs(imp, "Tiff", modeldir+"tmp.tif");
-//         try{
-//            input = ij.scifio().datasetIO().open(modeldir+"tmp.tif");
-//         //ij.ui().show(input);
-//          } catch (Exception e){
-//             IJ.error("Error "+e.toString());
-//         }
-    //restaure N slices
         if (imp.getNFrames()>1) 
-             imp.setDimensions(1, imp.getNSlices(), 1); 
+            imp.setDimensions(1, imp.getNSlices(), 1); 
     }
     
     // return label image - Needs to have been run in Label Image or Both output type mode
@@ -305,47 +275,51 @@ public class StarDist2D extends StarDist2DBase implements Command {
         return ImageJFunctions.wrap((RandomAccessibleInterval)img1, "Labelled");
     }
     
-   
     public ImagePlus associateLabels() {
         ImagePlus labImg = getLabelImagePlus();
         // put the image back in slices
-        labImg.setDimensions(1, labImg.getNChannels(), labImg.getNFrames());
+        if ( labImg.getNChannels()>1) labImg.setDimensions(1, labImg.getNChannels(), 1);
+        if ( labImg.getNFrames()>1) labImg.setDimensions(1, labImg.getNFrames(), 1);
         // do association
         ImagePlus[] associated = new ImagePlus[labImg.getNSlices()];
         associated[0] = labImg.crop(1+"-"+1);
         max = 0;
+        IJ.run(labImg, "Select None", ""); 
         for (int i=1; i<labImg.getNSlices(); i++) {
-            associated[i] = associate(labImg, i+1, associated[i-1]);
-            //System.out.println(max);
+             ImagePlus inext = labImg.crop((i+1)+"-"+(i+1));
+             associated[i] = associate(inext, associated[i-1]);
+             inext.flush();
+             inext.close();
         }
         ImagePlus hyperRes = new Concatenator().concatenate(associated, false);
         hyperRes.setDimensions(1, hyperRes.getNFrames(), 1);
+        labImg.changes = false;
+        labImg.close();
         //hyperRes.show();
         //new WaitForUserDialog("asso").show();
         return hyperRes;
     }
     
     /** Associate the label of frame t-1 with slice z */
-    public ImagePlus associate(ImagePlus ip, int z, ImagePlus ref) {
-        IJ.run(ip, "Select None", "");
-        ImagePlus i2 = ip.crop((z)+"-"+(z));
+    public ImagePlus associate(ImagePlus ip, ImagePlus ref) {
         
         ImageHandler img1 = ImageInt.wrap(ref);
-        ImageHandler img2 = ImageInt.wrap(i2);
+        ImageHandler img2 = ImageInt.wrap(ip);
         
         Objects3DPopulation population1 = new Objects3DPopulation(img1);
         Objects3DPopulation population2 = new Objects3DPopulation(img2);
-
+        
         Association association = new Association(population1, population2, new CostColocalisation(population1, population2,10));
         association.verbose = false;
         association.computeAssociation();
         // final associations
         List<AssociationPair> finalAssociations = association.getAssociationPairs();
-        List<Object3D> finalOrphan1 = association.getOrphan1Population().getObjectsList();
+        //List<Object3D> finalOrphan1 = association.getOrphan1Population().getObjectsList();
         List<Object3D> finalOrphan2 = association.getOrphan2Population().getObjectsList();
     
         // create results
         ImageHandler tracked = img1.createSameDimensions();
+                
         // draw results
         for (AssociationPair pair : finalAssociations) {
             int val1 = pair.getObject3D1().getValue();
@@ -360,7 +334,7 @@ public class StarDist2D extends StarDist2DBase implements Command {
         return tracked.getImagePlus();
     }
     
-    public void setParams(double percentileBottomVar, double percentileTopVar, double probThreshVar, double overlapThreshVar, String model, String outPutType){
+    public void setParams(double percentileBottomVar, double percentileTopVar, double probThreshVar, double overlapThreshVar, String outPutType){
     /*try {*/
 
     percentileBottom = percentileBottomVar;
@@ -368,7 +342,6 @@ public class StarDist2D extends StarDist2DBase implements Command {
     probThresh = probThreshVar;
     nmsThresh = overlapThreshVar;
     outputType = outPutType;
-    modelUrl = StarDist2D.class.getClassLoader().getResource("models/"+model);
     /*switch(modelType){
         case "file" :
             paramCNN.put("modelFile", model);

@@ -17,31 +17,31 @@ import java.util.List;
 
 public class RNA_Scope_Main implements PlugIn {
 
-    public static RNA_Scope_Main instance;
+    public RNA_Scope_Main instance;
     
     
     // parameters
     
-    public  static String outDirResults = "";
-    public  static String rootName = "";
-    public  static Calibration cal = new Calibration();
+    public  String outDirResults = "";
+    public  String rootName = "";
+    public  Calibration cal = new Calibration();
     public  final double pixDepth = 0.5;
     public  Cell nucleus = new Cell(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    public  static BufferedWriter output_detail_Analyze;
-    public  static boolean localImages = false;
-    public  static String imagesFolder;
-    public  static List<String> imagesFiles = new ArrayList<>();
-    public static boolean dialogCancel = false;
-    public static List<String> channels = new ArrayList<>();
-    public static String autoBackground = "";
-    public static String thMethod = "";
-    public static double singleDotIntGeneRef = 0, singleDotIntGeneX = 0, minNucVol = 50, calibBgGeneRef = 0, calibBgGeneX = 0,
+    public  BufferedWriter output_detail_Analyze;
+    public  boolean localImages = false;
+    public  String imagesFolder;
+    public  List<String> imagesFiles = new ArrayList<>();
+    public boolean dialogCancel = false;
+    public List<String> channels = new ArrayList<>();
+    public String autoBackground = "";
+    public String thMethod = "";
+    public double singleDotIntGeneRef = 0, singleDotIntGeneX = 0, minNucVol = 50, calibBgGeneRef = 0, calibBgGeneX = 0,
     maxNucVol = 900;
-    public static int roiBgSize = 100;
-    public static float nucDil = 3;
-    public static int removeSlice = 0;
-    public static boolean nucNumber = true;
-    public static String segMethod = "StarDist";
+    public int roiBgSize = 100;
+    public float nucDil = 3;
+    public int removeSlice = 0;
+    public boolean nucNumber = true;
+    public String segMethod = "StarDist";
        
     /**
      * 

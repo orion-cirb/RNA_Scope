@@ -1,17 +1,7 @@
 package RNA_Scope;
 
 
-import static RNA_Scope.RNA_Scope_Main.autoBackground;
-import static RNA_Scope.RNA_Scope_Main.cal;
-import static RNA_Scope.RNA_Scope_Main.calibBgGeneRef;
-import static RNA_Scope.RNA_Scope_Main.calibBgGeneX;
-import static RNA_Scope.RNA_Scope_Main.channels;
-import static RNA_Scope.RNA_Scope_Main.imagesFiles;
-import static RNA_Scope.RNA_Scope_Main.imagesFolder;
-import static RNA_Scope.RNA_Scope_Main.output_detail_Analyze;
-import static RNA_Scope.RNA_Scope_Main.removeSlice;
-import static RNA_Scope.RNA_Scope_Main.segMethod;
-import static RNA_Scope.RNA_Scope_Main.thMethod;
+
 import RNA_Scope_Utils.Cell;
 import RNA_Scope_Utils.Image_Utils;
 import ij.IJ;
@@ -30,7 +20,6 @@ import loci.formats.FormatException;
 import loci.formats.meta.IMetadata;
 import loci.formats.services.OMEXMLService;
 import loci.plugins.util.ImageProcessorReader;
-import loci.plugins.BF;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.RoiManager;
 import java.util.ArrayList;
@@ -38,16 +27,7 @@ import loci.plugins.in.ImporterOptions;
 import mcib3d.geom.Objects3DPopulation;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.ArrayUtils;
-import static RNA_Scope_Utils.RNA_Scope_Processing.InitResults;
-import static RNA_Scope_Utils.RNA_Scope_Processing.closeImages;
-import static RNA_Scope_Utils.RNA_Scope_Processing.findGenePop;
-import static RNA_Scope_Utils.RNA_Scope_Processing.findNucleus;
-import static RNA_Scope_Utils.RNA_Scope_Processing.findRoiBackgroundAuto;
-import static RNA_Scope_Utils.RNA_Scope_Processing.saveCells;
-import static RNA_Scope_Utils.RNA_Scope_Processing.saveDotsImage;
-import static RNA_Scope_Utils.RNA_Scope_Processing.stardistNucleiPop;
-import static RNA_Scope_Utils.RNA_Scope_Processing.tagsCells;
-import ij.gui.WaitForUserDialog;
+
 
 
 /**
@@ -55,19 +35,21 @@ import ij.gui.WaitForUserDialog;
  * @author phm
  */
 public class RNA_Scope_Local implements PlugIn {
-    
-    
+
+private RNA_Scope.RNA_Scope_Main main = new RNA_Scope.RNA_Scope_Main();
+private RNA_Scope_Utils.RNA_Scope_Processing process =  new  RNA_Scope_Utils.RNA_Scope_Processing();
+
     @Override
     public void run(String arg) {
             try {
                 // create output folder
-                String outDirResults = imagesFolder + File.separator+ "Results"+ File.separator;
+                String outDirResults = main.imagesFolder + File.separator+ "Results"+ File.separator;
                 File outDir = new File(outDirResults);
                 if (!Files.exists(Paths.get(outDirResults))) {
                     outDir.mkdir();
                 }
                 // initialize results files
-                InitResults(outDirResults);
+                process.InitResults(outDirResults);
                 String rootName = "";
                 
                 // create OME-XML metadata store of the latest schema version
@@ -77,52 +59,52 @@ public class RNA_Scope_Local implements PlugIn {
                 IMetadata meta = service.createOMEXMLMetadata();
                 ImageProcessorReader reader = new ImageProcessorReader();
                 reader.setMetadataStore(meta);
-                for (String f : imagesFiles) {
+                for (String f : main.imagesFiles) {
                     rootName = FilenameUtils.getBaseName(f);
                     reader.setId(f);
                     reader.setSeries(0);
                     int sizeC = reader.getSizeC();
                     int sizeZ = reader.getSizeZ();
-                    cal = Image_Utils.findImageCalib(meta);
+                    main.cal = Image_Utils.findImageCalib(meta);
                     String channelsID = meta.getImageName(0);
                     String[] chs = channelsID.replace("_", "-").split("/");
                     ImporterOptions options = new ImporterOptions();
                     options.setColorMode(ImporterOptions.COLOR_MODE_GRAYSCALE);
                     options.setId(f);
                     options.setSplitChannels(true);
-                    options.setZBegin(0, removeSlice);
-                    if (2 * removeSlice < sizeZ)
-                        options.setZEnd(0, sizeZ-1  - removeSlice);
+                    options.setZBegin(0, main.removeSlice);
+                    if (2 * main.removeSlice < sizeZ)
+                        options.setZEnd(0, sizeZ-1  - main.removeSlice);
                     options.setZStep(0, 1);
                     options.setQuiet(true);
 
                     /*
                     * Open Channel 1 (gene reference)
                     */
-                    int channelIndex = ArrayUtils.indexOf(chs, channels.get(1)) + 1;
-                    String imgChName = imagesFolder + File.separatorChar+rootName + "_w" + channelIndex + channels.get(1)+ ".TIF";
+                    int channelIndex = ArrayUtils.indexOf(chs, main.channels.get(1)) + 1;
+                    String imgChName = main.imagesFolder + File.separatorChar+rootName + "_w" + channelIndex + main.channels.get(1)+ ".TIF";
                     
-                    System.out.println("-- Opening gene reference channel : "+ channels.get(1));
+                    System.out.println("-- Opening gene reference channel : "+ main.channels.get(1));
                     ImagePlus imgGeneRef = IJ.openImage(imgChName);
-                    imgGeneRef.setCalibration(cal);
+                    imgGeneRef.setCalibration(main.cal);
                     
                     /*
                     * Open Channel 3 (gene X)
                     */
-                    channelIndex = ArrayUtils.indexOf(chs, channels.get(2)) + 1;
-                    imgChName = imagesFolder + File.separatorChar+rootName + "_w" + channelIndex + channels.get(2)+ ".TIF";
-                    System.out.println("-- Opening gene X channel : " + channels.get(2));
+                    channelIndex = ArrayUtils.indexOf(chs, main.channels.get(2)) + 1;
+                    imgChName = main.imagesFolder + File.separatorChar+rootName + "_w" + channelIndex + main.channels.get(2)+ ".TIF";
+                    System.out.println("-- Opening gene X channel : " + main.channels.get(2));
                     ImagePlus imgGeneX = IJ.openImage(imgChName);
-                    imgGeneX.setCalibration(cal);
+                    imgGeneX.setCalibration(main.cal);
 
                     Roi roiGeneRef = null, roiGeneX = null;
 
                     // Background detection methods
 
-                    switch (autoBackground) {
+                    switch (main.autoBackground) {
                         // from rois
                         case "From rois" :
-                            String roiFile = imagesFolder+ File.separator + rootName + ".zip";
+                            String roiFile = main.imagesFolder+ File.separator + rootName + ".zip";
                             if (!new File(roiFile).exists()) {
                                 IJ.showStatus("No roi file found !");
                                 return;
@@ -141,8 +123,8 @@ public class RNA_Scope_Local implements PlugIn {
                             break;
                         // automatic search roi from calibration values     
                         case "Auto" :
-                            roiGeneRef = findRoiBackgroundAuto(imgGeneRef, calibBgGeneRef);
-                            roiGeneX = findRoiBackgroundAuto(imgGeneX, calibBgGeneX);
+                            roiGeneRef = process.findRoiBackgroundAuto(imgGeneRef, main.calibBgGeneRef);
+                            roiGeneX = process.findRoiBackgroundAuto(imgGeneX, main.calibBgGeneX);
                             break;
                         case "From calibration" :
                             roiGeneRef = null;
@@ -152,56 +134,56 @@ public class RNA_Scope_Local implements PlugIn {
                      /*
                     * Open DAPI channel
                     */
-                    channelIndex = ArrayUtils.indexOf(chs, channels.get(0)) + 1;
-                    imgChName = imagesFolder + File.separator + rootName + "_w" + channelIndex+ channels.get(0)+ ".TIF";
-                    System.out.println("-- Opening Nucleus channel : "+ channels.get(0));
+                    channelIndex = ArrayUtils.indexOf(chs, main.channels.get(0)) + 1;
+                    imgChName = main.imagesFolder + File.separator + rootName + "_w" + channelIndex+ main.channels.get(0)+ ".TIF";
+                    System.out.println("-- Opening Nucleus channel : "+ main.channels.get(0));
                     ImagePlus imgNuc = IJ.openImage(imgChName);
-                    imgNuc.setCalibration(cal);
+                    imgNuc.setCalibration(main.cal);
                     imgNuc.deleteRoi();
                     imgNuc.updateAndDraw();
                     // if DeepL segmente nucleus with StarDist else find cells with cellOutliner
                     // else dilate nucleus
                     Objects3DPopulation cellsPop = new Objects3DPopulation();
-                    if (segMethod.equals("StarDist"))
-                        cellsPop = stardistNucleiPop(imgNuc);
+                    if (main.segMethod.equals("StarDist"))
+                        cellsPop = process.stardistNucleiPop(imgNuc);
                     else
-                        cellsPop = findNucleus(imgNuc);
+                        cellsPop = process.findNucleus(imgNuc);
                     
                     System.out.println(cellsPop.getNbObjects()+"-- Nuclei found");
                     // save random color nucleus popualation
-                    saveCells(imgNuc, cellsPop, outDirResults, rootName);
+                    process.saveCells(imgNuc, cellsPop, outDirResults, rootName);
 
                     // Find gene reference dots
-                    Objects3DPopulation geneRefDots = findGenePop(imgGeneRef, null, "Isodata");
+                    Objects3DPopulation geneRefDots = process.findGenePop(imgGeneRef, null, "Isodata");
                     System.out.println("Finding gene "+geneRefDots.getNbObjects()+" reference dots");
 
                     //Find gene X dots
-                    Objects3DPopulation geneXDots = findGenePop(imgGeneX, null, "Isodata");
+                    Objects3DPopulation geneXDots = process.findGenePop(imgGeneX, null, "Isodata");
                     System.out.println("Finding gene "+geneXDots.getNbObjects()+" X dots");
 
                     
                     // Find cells parameters in geneRef and geneX images
-                    ArrayList<Cell> listCells = tagsCells(cellsPop, geneRefDots, geneXDots, imgGeneRef, imgGeneX, roiGeneRef, roiGeneX);
+                    ArrayList<Cell> listCells = process.tagsCells(cellsPop, geneRefDots, geneXDots, imgGeneRef, imgGeneX, roiGeneRef, roiGeneX);
 
                     // write results for each cell population
                     for (int n = 0; n < listCells.size(); n++) {
-                        output_detail_Analyze.write(rootName+"\t"+listCells.get(n).getIndex()+"\t"+listCells.get(n).getCellVol()+"\t"+listCells.get(n).getzCell()+"\t"+listCells.get(n).getCellGeneRefInt()
+                        main.output_detail_Analyze.write(rootName+"\t"+listCells.get(n).getIndex()+"\t"+listCells.get(n).getCellVol()+"\t"+listCells.get(n).getzCell()+"\t"+listCells.get(n).getCellGeneRefInt()
                                 +"\t"+listCells.get(n).getCellGeneRefBgInt()+"\t"+listCells.get(n).getnbGeneRefDotsCellInt()+"\t"+listCells.get(n).getGeneRefDotsVol()+"\t"+listCells.get(n).getGeneRefDotsInt()
                                 +"\t"+listCells.get(n).getnbGeneRefDotsSegInt()+"\t"+listCells.get(n).getCellGeneXInt()+"\t"+listCells.get(n).getCellGeneXBgInt()+"\t"+listCells.get(n).getnbGeneXDotsCellInt()
                                 +"\t"+listCells.get(n).getGeneXDotsVol()+"\t"+listCells.get(n).getGeneXDotsInt()+"\t"+listCells.get(n).getnbGeneXDotsSegInt()+"\n");
-                        output_detail_Analyze.flush();                       
+                        main.output_detail_Analyze.flush();                       
 
                     }
                     
                     // save dots segmented objects
-                    saveDotsImage (imgNuc, cellsPop, geneRefDots, geneXDots, outDirResults, rootName);
+                    process.saveDotsImage (imgNuc, cellsPop, geneRefDots, geneXDots, outDirResults, rootName);
 
-                    closeImages(imgNuc);
-                    closeImages(imgGeneRef);
-                    closeImages(imgGeneX);
+                    process.closeImages(imgNuc);
+                    process.closeImages(imgGeneRef);
+                    process.closeImages(imgGeneX);
                 }
                 if (new File(outDirResults + "detailed_results.xls").exists())
-                    output_detail_Analyze.close();
+                    main.output_detail_Analyze.close();
                 } catch (IOException | DependencyException | ServiceException | FormatException ex) {
                     Logger.getLogger(RNA_Scope_Local.class.getName()).log(Level.SEVERE, null, ex);
                 }

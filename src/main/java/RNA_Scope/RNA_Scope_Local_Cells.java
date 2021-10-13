@@ -1,11 +1,6 @@
 package RNA_Scope;
 
 
-import static RNA_Scope.RNA_Scope_Main.cal;
-import static RNA_Scope.RNA_Scope_Main.output_detail_Analyze;
-import static RNA_Scope.RNA_Scope_Main.removeSlice;
-import static RNA_Scope.RNA_Scope_Main.thMethod;
-import static RNA_Scope_Utils.RNA_Scope_Processing.closeImages;
 import ij.IJ;
 import ij.ImagePlus;
 import java.io.File;
@@ -26,7 +21,6 @@ import ij.plugin.PlugIn;
 import loci.plugins.in.ImporterOptions;
 import mcib3d.geom.Objects3DPopulation;
 import org.apache.commons.io.FilenameUtils;
-import static RNA_Scope_Utils.RNA_Scope_Processing.find_nucleus2;
 import ij.ImageStack;
 import ij.io.FileSaver;
 import ij.measure.Calibration;
@@ -55,6 +49,8 @@ public class RNA_Scope_Local_Cells implements PlugIn {
     private double minNucVol = 50;
     private double maxNucVol = 1500;
     private int nucDil = 5;
+    private RNA_Scope.RNA_Scope_Main main = new RNA_Scope.RNA_Scope_Main();
+    private RNA_Scope_Utils.RNA_Scope_Processing process =  new  RNA_Scope_Utils.RNA_Scope_Processing();
     
     /**
      * Find images in folder
@@ -88,7 +84,7 @@ public class RNA_Scope_Local_Cells implements PlugIn {
         ImagePlus imgGreyPop = labelPop (cellsPop, imgNuc);
         FileSaver ImgGreyObjectsFile = new FileSaver(imgGreyPop);
         ImgGreyObjectsFile.saveAsTiff(outDirResults + rootName + "_Cells-ColorObjects.tif");
-        closeImages(imgGreyPop);
+        process.closeImages(imgGreyPop);
     }
     
     
@@ -180,12 +176,12 @@ public class RNA_Scope_Local_Cells implements PlugIn {
         ImagePlus imgStack = new ImagePlus("Nucleus", stack);        
         IJ.showStatus("Starting watershed...");
         ImagePlus imgWater = WatershedSplit(imgStack, 8);
-        closeImages(imgStack);
+        process.closeImages(imgStack);
         imgWater.setCalibration(cal);
         Objects3DPopulation cellPop = new Objects3DPopulation(imgWater);
         cellPop.removeObjectsTouchingBorders(imgWater, false);
-        closeImages(imgWater);
-        closeImages(img);
+        process.closeImages(imgWater);
+        process.closeImages(img);
         return(cellPop);
     }
     
@@ -265,9 +261,9 @@ public class RNA_Scope_Local_Cells implements PlugIn {
                     options.setId(f);
                     options.setSplitChannels(true);
                     int sizeZ = reader.getSizeZ();
-                    options.setZBegin(0, removeSlice);
-                    if (2 * removeSlice < sizeZ)
-                        options.setZEnd(0, sizeZ-1  - removeSlice);
+                    options.setZBegin(0, main.removeSlice);
+                    if (2 * main.removeSlice < sizeZ)
+                        options.setZEnd(0, sizeZ-1  - main.removeSlice);
                     options.setZStep(0, 1);
                     options.setCBegin(0, 0);
                     options.setCEnd(0, 0);
@@ -281,10 +277,10 @@ public class RNA_Scope_Local_Cells implements PlugIn {
                     ImagePlus imgNuc = BF.openImagePlus(options)[0];
 
                     findNucleus(imgNuc, outDirResults, rootName);
-                    closeImages(imgNuc);
+                    process.closeImages(imgNuc);
                 }
                 if (new File(outDirResults + "detailed_results.xls").exists())
-                    output_detail_Analyze.close();
+                    main.output_detail_Analyze.close();
                 } catch (IOException | DependencyException | ServiceException | FormatException ex) {
                     Logger.getLogger(RNA_Scope_Local_Cells.class.getName()).log(Level.SEVERE, null, ex);
                 }

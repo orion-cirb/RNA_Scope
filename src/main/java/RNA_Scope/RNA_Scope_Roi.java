@@ -6,15 +6,6 @@ package RNA_Scope;
 
 
 
-import static RNA_Scope.RNA_Scope_Main.cal;
-import static RNA_Scope.RNA_Scope_Main.singleDotIntGeneRef;
-import static RNA_Scope.RNA_Scope_Main.singleDotIntGeneX;
-import static RNA_Scope_Utils.Image_Utils.findChannels;
-import static RNA_Scope_Utils.Image_Utils.findImageCalib;
-import static RNA_Scope_Utils.Image_Utils.findImages;
-import static RNA_Scope_Utils.RNA_Scope_Processing.closeImages;
-import static RNA_Scope_Utils.RNA_Scope_Processing.findGenePop;
-import static RNA_Scope_Utils.RNA_Scope_Processing.find_background;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
@@ -69,13 +60,14 @@ private String imageDir = "";
 private String outDirResults = "";
 public final ImageIcon icon = new ImageIcon(this.getClass().getResource("/Orion_icon.png"));
 private String thMet = "Moments";
-
-
+private boolean stardist = false;
+private RNA_Scope_Utils.RNA_Scope_Processing process = new RNA_Scope_Utils.RNA_Scope_Processing();
+private RNA_Scope_Utils.Image_Utils utils = new RNA_Scope_Utils.Image_Utils();
+private RNA_Scope.RNA_Scope_Main main = new RNA_Scope.RNA_Scope_Main();
     /*
     * Integrated intensity
     */
     public static double find_Integrated(ImagePlus img, Roi roi) {
-        roi.setLocation(0, 0);
         ResultsTable rt = new ResultsTable();
         Analyzer ana = new Analyzer(img, Measurements.INTEGRATED_DENSITY, rt);
         double intDen = 0; 
@@ -86,10 +78,10 @@ private String thMet = "Moments";
             img.setRoi(roi);
             img.updateAndDraw();
             ana.measure();
-            intDen += rt.getValue("RawIntDen", index);
+            intDen += rt.getValue("IntDen", index);
             index++;
         }
-        System.out.println(roi.getName()+" Raw Int Den = " + intDen);
+        System.out.println(roi.getName()+"Int Den = " + intDen);
         return(intDen);  
     }
     
@@ -100,7 +92,7 @@ private String thMet = "Moments";
 
         ResultsTable rt = new ResultsTable();
         Analyzer ana = new Analyzer(img, Measurements.AREA, rt);
-        double vol = 0; 
+        double area = 0; 
         int index = 0;
         roi.setLocation(0, 0);
         for (int z = 1; z <= img.getNSlices(); z++) {
@@ -108,10 +100,11 @@ private String thMet = "Moments";
             img.setRoi(roi);
             img.updateAndDraw();
             ana.measure();
-            vol += rt.getValue("Area", index);
+            area += rt.getValue("Area", index);
             index++;
         }
-        vol = vol * img.getNSlices()*img.getCalibration().pixelHeight;
+        double vol;
+        vol = area * img.getCalibration().pixelDepth;
         System.out.println(roi.getName()+" vol = " + vol);
         return(vol);  
     }
@@ -138,9 +131,10 @@ private String thMet = "Moments";
             gd.addChoice("Gene X         : ", channel, channel[1]);
         gd.addMessage("Single dot calibration", Font.getFont("Monospace"), Color.blue);
         if (channels.size() == 3) 
-            gd.addNumericField("Gene reference single dot mean intensity : ", singleDotIntGeneRef, 0);
-        gd.addNumericField("Gene X single dot mean intensity : ", singleDotIntGeneX, 0);
+            gd.addNumericField("Gene reference single dot mean intensity : ", main.singleDotIntGeneRef, 0);
+        gd.addNumericField("Gene X single dot mean intensity : ", main.singleDotIntGeneX, 0);
         gd.addChoice("Dots threshold method : ", thMethods, thMet);
+        gd.addCheckbox("Stardist detection", stardist);
         gd.showDialog();
         ch.add(0, gd.getNextChoice());
         if (channels.size() == 3) {
@@ -150,9 +144,10 @@ private String thMet = "Moments";
         else
            ch.add(1, gd.getNextChoice()); 
         if (channels.size() == 3)
-            singleDotIntGeneRef = gd.getNextNumber();
-        singleDotIntGeneX = gd.getNextNumber();
+            main.singleDotIntGeneRef = gd.getNextNumber();
+        main.singleDotIntGeneX = gd.getNextNumber();
         thMet = gd.getNextChoice();
+        stardist = gd.getNextBoolean();
         if(gd.wasCanceled())
             ch = null;
         return(ch);
@@ -234,7 +229,7 @@ private String thMet = "Moments";
             }
             String fileExt = "nd";
             File inDir = new File(imageDir);
-            ArrayList<String> imageFiles = findImages(imageDir, fileExt);
+            ArrayList<String> imageFiles = utils.findImages(imageDir, fileExt);
             if (imageFiles == null) {
                 return;
             }
@@ -272,8 +267,8 @@ private String thMet = "Moments";
                 }
                 else {
                     if (imageNum == 0) {
-                        cal = findImageCalib(meta);
-                        channels = findChannels(f);
+                        main.cal = utils.findImageCalib(meta);
+                        channels =  utils.findChannels(f);
                         ch = dialog(channels);
                         if (ch == null) {
                             IJ.showStatus("Plugin cancelled !!!");
@@ -281,9 +276,9 @@ private String thMet = "Moments";
                         }
                         // write headers
                         output_Analyze.write("Image Name\tRoi\tGene Vol\tCells Integrated intensity in gene ref. channel\tMean background intensity in ref. channel\t"
-                            + "Total dots gene ref. (based on cells intensity)/µm3\tDots ref. volume (pixel3)\tIntegrated intensity of dots ref. channel\t"
+                            + "Total dots gene ref. (based on cells intensity)/µm3\tDots ref. volume µm3)\tIntegrated intensity of dots ref. channel\t"
                             + "Total dots gene ref (based on dots seg intensity)/µm3\tCells Integrated intensity in gene X channel\tMean background intensity in X channel\t"
-                            + "Total dots gene X (based on cells intensity)/µm3\tDots X volume (pixel3)\tIntegrated intensity of dots X channel\tTotal dots gene X (based on dots seg intensity)/µm3\n");
+                            + "Total dots gene X (based on cells intensity)/µm3\tDots X volume µm3\tIntegrated intensity of dots X channel\tTotal dots gene X (based on dots seg intensity)/µm3\n");
                         output_Analyze.flush();
                     }
                     imageNum++;
@@ -320,7 +315,7 @@ private String thMet = "Moments";
                             // Open Gene reference channel
                             System.out.println("Opening Ref gene channel for background...");
                             imgGeneRef = BF.openImagePlus(options)[channels.indexOf(ch.get(1))];
-                            geneRefBgInt = find_background(imgGeneRef, 1, imgGeneRef.getNSlices());
+                            geneRefBgInt = process.find_background(imgGeneRef, 1, imgGeneRef.getNSlices());
                             System.out.println("Background reference gene channel "+geneRefBgInt);
                             imgGeneRef.close();
                         }
@@ -332,7 +327,7 @@ private String thMet = "Moments";
                             else
                                 channel = channels.indexOf(ch.get(1));
                             imgGeneX = BF.openImagePlus(options)[channel];
-                            geneXBgInt = find_background(imgGeneX, 1, imgGeneX.getNSlices());
+                            geneXBgInt = process.find_background(imgGeneX, 1, imgGeneX.getNSlices());
                             System.out.println("Background X gene channel "+geneXBgInt);
                             imgGeneX.close();
                         }
@@ -351,8 +346,13 @@ private String thMet = "Moments";
                             if (channels.size() == 3) {
                                 imgGeneRef = BF.openImagePlus(options)[channels.indexOf(ch.get(1))];
                                 geneRefInt = find_Integrated(imgGeneRef, roi);
-                                geneRefPop = findGenePop(imgGeneRef, roi, thMet);
+                                if (stardist)
+                                    geneRefPop = process.stardistGenePop(imgGeneRef, roi);
+                                else            
+                                    geneRefPop = process.findGenePop(imgGeneRef, roi, thMet);
+                                System.out.println(geneRefPop.getNbObjects()+ " genes ref found");
                             }
+                            
                             // for gene X
                             if (channels.size() == 3)
                                 channel = channels.indexOf(ch.get(2));
@@ -361,8 +361,12 @@ private String thMet = "Moments";
                             imgGeneX = BF.openImagePlus(options)[channel];
                             geneXInt = find_Integrated(imgGeneX, roi);
                             double geneVol = find_Volume(imgGeneX, roi);
-                            geneXPop = findGenePop(imgGeneX, roi, thMet);
-
+                            if (stardist)
+                                    geneXPop = process.stardistGenePop(imgGeneX, roi);
+                                else            
+                                    geneXPop = process.findGenePop(imgGeneX, roi, thMet);
+                            System.out.println(geneXPop.getNbObjects()+ " genes X found");
+                            
                             // corrected value    
                             geneXIntCor = geneXInt - geneXBgInt*geneVol;
                             geneRefIntCor = geneRefInt - geneRefBgInt*geneVol;
@@ -371,12 +375,12 @@ private String thMet = "Moments";
                             
                             double geneRefDotsInt = 0;
                             double geneRefDotsVol =0;
-                            // find dots integrated intensity
+                            // find segmented dots integrated intensity
                             if (channels.size() == 3) {
                                 for (int n = 0; n < geneRefPop.getNbObjects(); n++) {
                                     Object3D dotobj = geneRefPop.getObject(n);
                                     geneRefDotsInt += dotobj.getIntegratedDensity(ImageHandler.wrap(imgGeneRef));
-                                    geneRefDotsVol += dotobj.getVolumePixels();
+                                    geneRefDotsVol += dotobj.getVolumeUnit();
                                 }
                             }
                             double geneRefDotsIntCor = geneRefDotsInt - geneRefBgInt*geneRefDotsVol;
@@ -385,22 +389,21 @@ private String thMet = "Moments";
                             for (int n = 0; n < geneXPop.getNbObjects(); n++) {
                                 Object3D dotobj = geneXPop.getObject(n);
                                 geneXDotsInt += dotobj.getIntegratedDensity(ImageHandler.wrap(imgGeneX));
-                                geneXDotsVol += dotobj.getVolumePixels();
+                                geneXDotsVol += dotobj.getVolumeUnit();
                             }
                             double geneXDotsIntCor = geneXDotsInt - geneXBgInt*geneXDotsVol;
-                            double geneRefDotsVol_micron = geneRefDotsVol*cal.pixelWidth*cal.pixelHeight*cal.pixelDepth;
-                            double geneXDotsVol_micron = geneXDotsVol*cal.pixelWidth*cal.pixelHeight*cal.pixelDepth;
-                            output_Analyze.write(rootName+"\t"+roiName+"\t"+geneVol+"\t"+geneRefInt+"\t"+geneRefBgInt+"\t"+(geneRefIntCor/singleDotIntGeneRef)/geneVol+"\t"+geneRefDotsVol+"\t"+geneRefDotsIntCor+"\t"+
-                                    (geneRefDotsIntCor/singleDotIntGeneRef/geneRefDotsVol_micron)+"\t"+geneXInt+"\t"+geneXBgInt+"\t"+geneXDotsVol+"\t"+geneXIntCor+"\t"+
-                                    (geneXIntCor/singleDotIntGeneX)/geneVol+"\t"+(geneXDotsIntCor/singleDotIntGeneX)/geneXDotsVol_micron+"\n");
+                            output_Analyze.write(rootName+"\t"+roiName+"\t"+geneVol+"\t"+geneRefInt+"\t"+geneRefBgInt+"\t"+(geneRefIntCor/main.singleDotIntGeneRef)/geneVol+"\t"+geneRefDotsVol+"\t"+geneRefDotsIntCor+"\t"+
+                                    geneRefPop.getNbObjects()/geneVol+"\t"+geneXInt+"\t"+geneXBgInt+"\t"+(geneXIntCor/main.singleDotIntGeneX)/geneVol+"\t"+geneXDotsVol+"\t"+geneXDotsIntCor+"\t"+
+                                    geneXPop.getNbObjects()/geneVol+"\n");
                             output_Analyze.flush();
-                        }                            
+                        }  
                     }
                     if (imgGeneRef != null)
-                        closeImages(imgGeneRef);
-                    closeImages(imgGeneX);
+                        process.closeImages(imgGeneRef);
+                    process.closeImages(imgGeneX);
                 }
             }
+            process.deleteTmpModelFileStarDist();
             output_Analyze.close();
             IJ.showStatus("Process done ...");
         } catch (DependencyException | ServiceException | FormatException | IOException ex) {
