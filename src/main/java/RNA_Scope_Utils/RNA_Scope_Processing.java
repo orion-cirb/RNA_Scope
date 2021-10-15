@@ -65,14 +65,14 @@ public class RNA_Scope_Processing {
     
     public CLIJ2 clij2 = CLIJ2.getInstance();
     private double minDots = 0.5;
-    private double maxDots = 10;
+    private double maxDots = 25;
     public Object syncObject = new Object();
     public double stardistPercentileBottom = 0.2;
     public double stardistPercentileTop = 99.8;
-    public double stardistProbThresh = 0.55;
-    public double stardistOverlayThresh = 0.4;
-    public double stardistProbThreshDots = 0.6;
-    public double stardistOverlayThreshDots = 0.4;
+    public double stardistProbThreshNuc = 0.55;
+    public double stardistOverlayThreshNuc = 0.4;
+    public double stardistProbThreshDots = 0.3;
+    public double stardistOverlayThreshDots = 0.15;
     public String stardistOutput = "Label Image"; 
     private Calibration cal;
     protected URL modelUrl = RNA_Scope_Processing.class.getClassLoader().getResource("models/dsb2018_heavy_augment.zip");
@@ -541,7 +541,7 @@ public class RNA_Scope_Processing {
             copyModelFileStarDist();
             StarDist2D star = new StarDist2D(syncObject, tmpModelFile);
             star.loadInput(imgNuc);
-            star.setParams(stardistPercentileBottom, stardistPercentileTop, stardistProbThresh, stardistOverlayThresh, stardistOutput);
+            star.setParams(stardistPercentileBottom, stardistPercentileTop, stardistProbThreshNuc, stardistOverlayThreshNuc, stardistOutput);
             star.run();
             // label in 3D
             ImagePlus nuclei = star.associateLabels();
