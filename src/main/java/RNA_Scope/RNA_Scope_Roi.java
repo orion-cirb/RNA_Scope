@@ -55,7 +55,7 @@ import org.apache.commons.io.FilenameUtils;
  */
 public class RNA_Scope_Roi implements PlugIn {
     
-
+private Calibration cal;
 private String imageDir = "";
 private String outDirResults = "";
 public final ImageIcon icon = new ImageIcon(this.getClass().getResource("/Orion_icon.png"));
@@ -267,7 +267,7 @@ private RNA_Scope.RNA_Scope_Main main = new RNA_Scope.RNA_Scope_Main();
                 }
                 else {
                     if (imageNum == 0) {
-                        main.cal = utils.findImageCalib(meta);
+                        cal = utils.findImageCalib(meta);
                         channels =  utils.findChannels(f);
                         ch = dialog(channels);
                         if (ch == null) {

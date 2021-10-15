@@ -7,6 +7,7 @@ import RNA_Scope_Utils.Image_Utils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Roi;
+import ij.measure.Calibration;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,6 +39,7 @@ public class RNA_Scope_Local implements PlugIn {
 
 private RNA_Scope.RNA_Scope_Main main = new RNA_Scope.RNA_Scope_Main();
 private RNA_Scope_Utils.RNA_Scope_Processing process =  new  RNA_Scope_Utils.RNA_Scope_Processing();
+private Calibration cal;
 
     @Override
     public void run(String arg) {
@@ -65,7 +67,7 @@ private RNA_Scope_Utils.RNA_Scope_Processing process =  new  RNA_Scope_Utils.RNA
                     reader.setSeries(0);
                     int sizeC = reader.getSizeC();
                     int sizeZ = reader.getSizeZ();
-                    main.cal = Image_Utils.findImageCalib(meta);
+                    cal = Image_Utils.findImageCalib(meta);
                     String channelsID = meta.getImageName(0);
                     String[] chs = channelsID.replace("_", "-").split("/");
                     ImporterOptions options = new ImporterOptions();
@@ -86,7 +88,7 @@ private RNA_Scope_Utils.RNA_Scope_Processing process =  new  RNA_Scope_Utils.RNA
                     
                     System.out.println("-- Opening gene reference channel : "+ main.channels.get(1));
                     ImagePlus imgGeneRef = IJ.openImage(imgChName);
-                    imgGeneRef.setCalibration(main.cal);
+                    imgGeneRef.setCalibration(cal);
                     
                     /*
                     * Open Channel 3 (gene X)
@@ -95,7 +97,7 @@ private RNA_Scope_Utils.RNA_Scope_Processing process =  new  RNA_Scope_Utils.RNA
                     imgChName = main.imagesFolder + File.separatorChar+rootName + "_w" + channelIndex + main.channels.get(2)+ ".TIF";
                     System.out.println("-- Opening gene X channel : " + main.channels.get(2));
                     ImagePlus imgGeneX = IJ.openImage(imgChName);
-                    imgGeneX.setCalibration(main.cal);
+                    imgGeneX.setCalibration(cal);
 
                     Roi roiGeneRef = null, roiGeneX = null;
 
@@ -138,7 +140,7 @@ private RNA_Scope_Utils.RNA_Scope_Processing process =  new  RNA_Scope_Utils.RNA
                     imgChName = main.imagesFolder + File.separator + rootName + "_w" + channelIndex+ main.channels.get(0)+ ".TIF";
                     System.out.println("-- Opening Nucleus channel : "+ main.channels.get(0));
                     ImagePlus imgNuc = IJ.openImage(imgChName);
-                    imgNuc.setCalibration(main.cal);
+                    imgNuc.setCalibration(cal);
                     imgNuc.deleteRoi();
                     imgNuc.updateAndDraw();
                     // if DeepL segmente nucleus with StarDist else find cells with cellOutliner

@@ -109,7 +109,7 @@ public class Image_Utils {
         else
             cal.pixelDepth = 1;
         cal.setUnit("microns");
-        System.out.println("x cal = " +cal.pixelWidth+", z cal=" + cal.pixelDepth);
+        System.out.println("x/y cal = " +cal.pixelWidth+", z cal=" + cal.pixelDepth);
         return(cal);
     }
     

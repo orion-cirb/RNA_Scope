@@ -8,6 +8,7 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.Prefs;
 import ij.gui.Roi;
+import ij.gui.WaitForUserDialog;
 import ij.io.FileSaver;
 import ij.measure.Calibration;
 import ij.measure.Measurements;
@@ -46,6 +47,7 @@ import mcib3d.image3d.processing.FastFilters3D;
 import mcib3d.image3d.regionGrowing.Watershed3D;
 import net.haesleinhuepf.clij.clearcl.ClearCLBuffer;
 import net.haesleinhuepf.clij2.CLIJ2;
+import org.apache.tools.ant.taskdefs.WaitFor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -71,7 +73,8 @@ public class RNA_Scope_Processing {
     public double stardistOverlayThresh = 0.4;
     public double stardistProbThreshDots = 0.6;
     public double stardistOverlayThreshDots = 0.4;
-    public String stardistOutput = "Label Image";  
+    public String stardistOutput = "Label Image"; 
+    private Calibration cal;
     protected URL modelUrl = RNA_Scope_Processing.class.getClassLoader().getResource("models/dsb2018_heavy_augment.zip");
     private File tmpModelFile = null;
     private RNA_Scope.RNA_Scope_Main main = new RNA_Scope.RNA_Scope_Main();
@@ -155,7 +158,7 @@ public class RNA_Scope_Processing {
         ClearCLBuffer output = clij2.create(imgCL);
         clij2.connectedComponentsLabelingBox(imgCL, output);
         ImagePlus imgLab  = clij2.pull(output);
-        imgLab.setCalibration(main.cal);
+        imgLab.setCalibration(cal);
         if (roi != null) {
             roi.setLocation(0, 0);
             clearOutSide(imgLab, roi);
@@ -273,6 +276,7 @@ public class RNA_Scope_Processing {
      * @return genePop
      */
     public Objects3DPopulation findGenePop(ImagePlus imgGeneRef, Roi roi, String thMet) {
+        cal = imgGeneRef.getCalibration();
         ImagePlus img = new Duplicator().run(imgGeneRef);
         ClearCLBuffer imgCL = clij2.push(img);
         ClearCLBuffer imgCLMed = medianFilter(imgCL, 1, 1, 1);
@@ -295,7 +299,7 @@ public class RNA_Scope_Processing {
         //create image objects population
         Font tagFont = new Font("SansSerif", Font.PLAIN, 30);
         ImageHandler imgObj = ImageInt.wrap(img).createSameDimensions();
-        imgObj.setCalibration(main.cal);
+        imgObj.setCalibration(cal);
         for (int i = 0; i < cellsPop.getNbObjects(); i++) {
             Object3D obj = cellsPop.getObject(i);
             obj.draw(imgObj, (i+1));
@@ -417,8 +421,8 @@ public class RNA_Scope_Processing {
      * @return 
      */
     private Object3DVoxels dilCellObj(ImagePlus img, Object3D obj) {
-        Object3D objDil = obj.getDilatedObject((float)(main.nucDil/main.cal.pixelWidth), (float)(main.nucDil/main.cal.pixelHeight), 
-                (float)(main.nucDil/main.cal.pixelDepth));
+        Object3D objDil = obj.getDilatedObject((float)(main.nucDil/cal.pixelWidth), (float)(main.nucDil/cal.pixelHeight), 
+                (float)(main.nucDil/cal.pixelDepth));
         // check if object go outside image
         if (objDil.getXmin() < 0 || objDil.getXmax() > img.getWidth() || objDil.getYmin() < 0 || objDil.getYmax() > img.getHeight()
                 || objDil.getZmin() < 0 || objDil.getZmax() > img.getNSlices()) {
@@ -432,6 +436,7 @@ public class RNA_Scope_Processing {
     
     public  Objects3DPopulation findNucleus(ImagePlus imgNuc) {
         Objects3DPopulation nucPopOrg = new Objects3DPopulation();
+        cal = imgNuc.getCalibration();
         nucPopOrg = find_nucleus2(imgNuc);
         System.out.println("-- Total nucleus Population :"+nucPopOrg.getNbObjects());
         // size filter
@@ -476,7 +481,7 @@ public class RNA_Scope_Processing {
         IJ.showStatus("Starting watershed...");
         ImagePlus imgWater = WatershedSplit(imgStack, 8);
         closeImages(imgStack);
-        imgWater.setCalibration(main.cal);
+        imgWater.setCalibration(cal);
         Objects3DPopulation cellPop = new Objects3DPopulation(imgWater);
         cellPop.removeObjectsTouchingBorders(imgWater, false);
         closeImages(imgWater);
@@ -490,13 +495,14 @@ public class RNA_Scope_Processing {
     public Objects3DPopulation stardistGenePop(ImagePlus imgGene, Roi roi) throws IOException{
         roi.setLocation(0, 0);
         imgGene.setRoi(roi);
+        cal = imgGene.getCalibration();
         ImagePlus img = new Duplicator().run(imgGene);
         ClearCLBuffer imgCL = clij2.push(img);
         ClearCLBuffer imgCLMed = medianFilter(imgCL, 1, 1, 1);
         clij2.release(imgCL);
         ImagePlus imgGeneMed = clij2.pull(imgCLMed);
         clij2.release(imgCLMed);
-        imgGeneMed.setCalibration(main.cal);
+        imgGeneMed.setCalibration(cal);
         
         // Go StarDist
         copyModelFileStarDist();
@@ -506,19 +512,19 @@ public class RNA_Scope_Processing {
         star.run();
         // label in 3D
         ImagePlus imgGeneLab = star.associateLabels();
-        imgGeneLab.setCalibration(main.cal);
+        imgGeneLab.setCalibration(cal);
         if (roi != null) {
             roi.setLocation(0, 0);
             clearOutSide(imgGeneLab, roi);
         }
         ImageInt label3D = ImageInt.wrap(imgGeneLab);
-        label3D.setCalibration(main.cal);
-        
-        Objects3DPopulation nucPop = new Objects3DPopulation(label3D);
-        Objects3DPopulation nPop = new Objects3DPopulation(nucPop.getObjectsWithinVolume(minDots, maxDots, true));
+        label3D.setCalibration(cal);
+        Objects3DPopulation genePop = new Objects3DPopulation(label3D);
+        System.out.println(genePop.getNbObjects()+" dots");
+        genePop = new Objects3DPopulation(genePop.getObjectsWithinVolume(minDots, maxDots, true));
         closeImages(imgGeneLab);
         closeImages(imgGeneMed);
-        return(nPop);
+        return(genePop);
         }
     
     
@@ -527,6 +533,7 @@ public class RNA_Scope_Processing {
          * return nuclei population
          */
         public Objects3DPopulation stardistNucleiPop(ImagePlus imgNuc) throws IOException{
+            cal = imgNuc.getCalibration();
             IJ.run(imgNuc, "Remove Outliers", "block_radius_x=40 block_radius_y=40 standard_deviations=1 stack");
             // clear slices on which there is no signal before to stardist it (to do: add in stardist a test if image is empty ?)
             clearSlicesWithoutSignal(imgNuc);
@@ -538,9 +545,9 @@ public class RNA_Scope_Processing {
             star.run();
             // label in 3D
             ImagePlus nuclei = star.associateLabels();
-            nuclei.setCalibration(main.cal);
+            nuclei.setCalibration(cal);
             ImageInt label3D = ImageInt.wrap(nuclei);
-            label3D.setCalibration(main.cal);
+            label3D.setCalibration(cal);
             Objects3DPopulation nucPop = new Objects3DPopulation(label3D);
             Objects3DPopulation nPop = new Objects3DPopulation(nucPop.getObjectsWithinVolume(main.minNucVol, main.maxNucVol, true));
             closeImages(nuclei);
@@ -778,7 +785,7 @@ public class RNA_Scope_Processing {
         geneXPop.draw(imgDotsGeneX, 255);
         ImagePlus[] imgColors = {imgDotsGeneRef.getImagePlus(), imgDotsGeneX.getImagePlus(), imgCells.getImagePlus(), null, imgCellNumbers.getImagePlus()};
         ImagePlus imgObjects = new RGBStackMerge().mergeHyperstacks(imgColors, false);
-        imgObjects.setCalibration(main.cal);
+        imgObjects.setCalibration(cal);
         IJ.run(imgObjects, "Enhance Contrast", "saturated=0.35");
 
         // Save images

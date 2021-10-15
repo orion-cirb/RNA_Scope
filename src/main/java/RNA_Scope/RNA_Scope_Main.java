@@ -7,7 +7,6 @@ package RNA_Scope;
  */
 import RNA_Scope_Utils.Cell;
 import ij.*;
-import ij.measure.Calibration;
 import ij.plugin.PlugIn;
 import java.io.BufferedWriter;
 import java.awt.Frame;
@@ -24,7 +23,6 @@ public class RNA_Scope_Main implements PlugIn {
     
     public  String outDirResults = "";
     public  String rootName = "";
-    public  Calibration cal = new Calibration();
     public  final double pixDepth = 0.5;
     public  Cell nucleus = new Cell(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     public  BufferedWriter output_detail_Analyze;
