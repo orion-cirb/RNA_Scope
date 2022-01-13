@@ -8,7 +8,6 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.Prefs;
 import ij.gui.Roi;
-import ij.gui.WaitForUserDialog;
 import ij.io.FileSaver;
 import ij.measure.Calibration;
 import ij.measure.Measurements;
@@ -24,11 +23,13 @@ import java.awt.Font;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,12 +43,12 @@ import mcib3d.geom.Point3D;
 import mcib3d.image3d.ImageFloat;
 import mcib3d.image3d.ImageHandler;
 import mcib3d.image3d.ImageInt;
+import mcib3d.image3d.ImageLabeller;
 import mcib3d.image3d.distanceMap3d.EDT;
 import mcib3d.image3d.processing.FastFilters3D;
 import mcib3d.image3d.regionGrowing.Watershed3D;
 import net.haesleinhuepf.clij.clearcl.ClearCLBuffer;
 import net.haesleinhuepf.clij2.CLIJ2;
-import org.apache.tools.ant.taskdefs.WaitFor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -64,39 +65,40 @@ import org.xml.sax.SAXException;
 public class RNA_Scope_Processing {
     
     public CLIJ2 clij2 = CLIJ2.getInstance();
-    private double minDots = 0.5;
-    private double maxDots = 25;
+    public double minDots = 0.5;
+    public double maxDots = 5;
     public Object syncObject = new Object();
-    public double stardistPercentileBottom = 0.2;
-    public double stardistPercentileTop = 99.8;
-    public double stardistProbThreshNuc = 0.55;
-    public double stardistOverlayThreshNuc = 0.4;
-    public double stardistProbThreshDots = 0.3;
-    public double stardistOverlayThreshDots = 0.15;
+    public final double stardistPercentileBottom = 0.2;
+    public final double stardistPercentileTop = 99.8;
+    public final double stardistProbThreshNuc = 0.55;
+    public final double stardistOverlayThreshNuc = 0.4;
+    public final double stardistProbThreshDots = 0.7;
+    public final double stardistOverlayThreshDots = 0.45;
+    public File modelsPath = new File(IJ.getDirectory("imagej")+File.separator+"models");
+    public String stardistModelNucleus = "";
+    public String stardistModelGenes = "";
     public String stardistOutput = "Label Image"; 
     private Calibration cal;
-    protected URL modelUrl = RNA_Scope_Processing.class.getClassLoader().getResource("models/dsb2018_heavy_augment.zip");
-    private File tmpModelFile = null;
+    
+
+    
     private RNA_Scope.RNA_Scope_Main main = new RNA_Scope.RNA_Scope_Main();
+     
     
-    
-    public void copyModelFileStarDist(){
-        try {
-             tmpModelFile = File.createTempFile("stardist_model_", ".zip"); 
-             Files.copy(modelUrl.openStream(), tmpModelFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException ex) {
-            Logger.getLogger(RNA_Scope_Processing.class.getName()).log(Level.SEVERE, null, ex);
+    /*
+    Find starDist models in Fiji models folder
+    */
+    public String[] findStardistModels() {
+        FilenameFilter filter = (dir, name) -> name.endsWith(".zip");
+        File[] modelList = modelsPath.listFiles(filter);
+        String[] models = new String[modelList.length];
+        for (int i = 0; i < modelList.length; i++) {
+            models[i] = modelList[i].getName();
         }
-    } 
-    
-    public void deleteTmpModelFileStarDist(){
-         try {
-                if (tmpModelFile != null && tmpModelFile.exists())
-                    tmpModelFile.delete();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        Arrays.sort(models);
+        return(models);
     }
+    
     
      /**
      * check  installed modules
@@ -146,6 +148,19 @@ public class RNA_Scope_Processing {
         img.updateAndDraw();
     }
     
+/**
+     * return objects population in an binary image
+     * @param img
+     * @return pop objects population
+     */
+
+    public  Objects3DPopulation getPopFromImage(ImagePlus img) {
+        // label binary images first
+        ImageLabeller labeller = new ImageLabeller();
+        ImageInt labels = labeller.getLabels(ImageHandler.wrap(img));
+        Objects3DPopulation pop = new Objects3DPopulation(labels);
+        return pop;
+    } 
     
   /**
      * return objects population in an binary image
@@ -275,18 +290,17 @@ public class RNA_Scope_Processing {
      * @param imgGeneRef
      * @return genePop
      */
-    public Objects3DPopulation findGenePop(ImagePlus imgGeneRef, Roi roi, String thMet) {
+    public Objects3DPopulation findGenePop(ImagePlus imgGeneRef, Roi roi) {
         cal = imgGeneRef.getCalibration();
         ImagePlus img = new Duplicator().run(imgGeneRef);
         ClearCLBuffer imgCL = clij2.push(img);
         ClearCLBuffer imgCLMed = medianFilter(imgCL, 1, 1, 1);
         clij2.release(imgCL);
-        ClearCLBuffer imgCLDOG = DOG(imgCLMed, 1, 1, 1, 2, 2, 2);
+        ClearCLBuffer imgCLDOG = DOG(imgCLMed, main.DOGMin, main.DOGMin, main.DOGMin, main.DOGMax, main.DOGMax, main.DOGMax);
         clij2.release(imgCLMed);
-        ClearCLBuffer imgCLBin = threshold(imgCLDOG, thMet, false); 
+        ClearCLBuffer imgCLBin = threshold(imgCLDOG, main.geneThMethod, false); 
         clij2.release(imgCLDOG);
         Objects3DPopulation genePop = getPopFromClearBuffer(imgCLBin, roi);
-        
         clij2.release(imgCLBin);       
         return(genePop);
     }
@@ -466,7 +480,7 @@ public class RNA_Scope_Processing {
             IJ.showStatus("Finding nucleus section "+i+" / "+img.getStackSize());
             img.setZ(i);
             img.updateAndDraw();
-            IJ.run(img, "Nuclei Outline", "blur=20 blur2=30 threshold_method="+main.thMethod+" outlier_radius=50 outlier_threshold=1 max_nucleus_size=100 "
+            IJ.run(img, "Nuclei Outline", "blur=20 blur2=30 threshold_method="+main.nucThMethod+" outlier_radius=50 outlier_threshold=1 max_nucleus_size=100 "
                     + "min_nucleus_size=10 erosion=5 expansion_inner=5 expansion=5 results_overlay");
             img.setZ(1);
             img.updateAndDraw();
@@ -505,8 +519,8 @@ public class RNA_Scope_Processing {
         imgGeneMed.setCalibration(cal);
         
         // Go StarDist
-        copyModelFileStarDist();
-        StarDist2D star = new StarDist2D(syncObject, tmpModelFile);
+        File starDistModelFile = new File(stardistModelGenes);
+        StarDist2D star = new StarDist2D(syncObject, starDistModelFile);
         star.loadInput(imgGeneMed);
         star.setParams(stardistPercentileBottom, stardistPercentileTop, stardistProbThreshDots, stardistOverlayThreshDots, stardistOutput);
         star.run();
@@ -517,11 +531,8 @@ public class RNA_Scope_Processing {
             roi.setLocation(0, 0);
             clearOutSide(imgGeneLab, roi);
         }
-        ImageInt label3D = ImageInt.wrap(imgGeneLab);
-        label3D.setCalibration(cal);
-        Objects3DPopulation genePop = new Objects3DPopulation(label3D);
+        Objects3DPopulation genePop = new Objects3DPopulation(getPopFromImage(imgGeneLab).getObjectsWithinVolume(minDots, maxDots, true));
         System.out.println(genePop.getNbObjects()+" dots");
-        genePop = new Objects3DPopulation(genePop.getObjectsWithinVolume(minDots, maxDots, true));
         closeImages(imgGeneLab);
         closeImages(imgGeneMed);
         return(genePop);
@@ -535,11 +546,12 @@ public class RNA_Scope_Processing {
         public Objects3DPopulation stardistNucleiPop(ImagePlus imgNuc) throws IOException{
             cal = imgNuc.getCalibration();
             IJ.run(imgNuc, "Remove Outliers", "block_radius_x=40 block_radius_y=40 standard_deviations=1 stack");
-            // clear slices on which there is no signal before to stardist it (to do: add in stardist a test if image is empty ?)
-            clearSlicesWithoutSignal(imgNuc);
+            // Clear unfocus Z plan
+            Find_focused_slices focus = new Find_focused_slices();
+            focus.run(imgNuc);
             // Go StarDist
-            copyModelFileStarDist();
-            StarDist2D star = new StarDist2D(syncObject, tmpModelFile);
+            File starDistModelFile = new File(stardistModelNucleus);
+            StarDist2D star = new StarDist2D(syncObject, starDistModelFile);
             star.loadInput(imgNuc);
             star.setParams(stardistPercentileBottom, stardistPercentileTop, stardistProbThreshNuc, stardistOverlayThreshNuc, stardistOutput);
             star.run();
@@ -553,40 +565,6 @@ public class RNA_Scope_Processing {
             closeImages(nuclei);
             return(nPop);
         }
-    
-        public void clearSlicesWithoutSignal(ImagePlus imp) {
-            // try to get rid of extreme slices without nuclei
-            ImagePlus bin = new Duplicator().run(imp);
-            IJ.setAutoThreshold(bin, "Otsu dark stack");
-            Prefs.blackBackground = false;
-            IJ.run(bin, "Convert to Mask", "method=Otsu background=Dark stack");
-
-            bin.setSlice(bin.getNSlices()/2);
-            ImageStatistics stat = bin.getStatistics();
-            // threshold didn't work well, very few pixels found
-            if ( stat.mean < 10 ) {
-                closeImages(bin);
-                bin = new Duplicator().run(imp);
-                IJ.setAutoThreshold(bin, "Default dark stack");
-                Prefs.blackBackground = false;
-                IJ.run(bin, "Convert to Mask", "method=Default background=Dark stack");
-            }
-
-           for ( int i=1; i <= imp.getNSlices(); i++ )
-           {
-                bin.setSlice(i);
-                stat = bin.getStatistics();
-                // don't contain signal
-                if (stat.mean < 10)
-                {
-                    imp.setSlice(i);
-                    IJ.run(imp, "Select All", "");
-                    IJ.setBackgroundColor(0, 0, 0);
-                    IJ.run(imp, "Clear", "slice");
-                }
-            }
-        }
-    
     
     private ImagePlus WatershedSplit(ImagePlus binaryMask, float rad) {
         float resXY = 1;

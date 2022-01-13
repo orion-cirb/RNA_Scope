@@ -90,8 +90,14 @@ public class RNA_Scope_Omero implements PlugIn {
                         ImagePlus imgGeneRef = getImageZ(image, 1, channelIndex + 1, zStart, zStop).getImagePlus();
                         
                         // Find gene reference dots
-                        Objects3DPopulation geneRefDots = process.findGenePop(imgGeneRef, null, "Isodata");
-                        System.out.println(geneRefDots.getNbObjects() + " gene dots ref found");
+                        Objects3DPopulation geneRefDots = new Objects3DPopulation();
+                        if (main.geneSegMethod.equals("StarDist"))
+                            geneRefDots = process.stardistGenePop(imgGeneRef, null);
+                        else
+                            geneRefDots = process.findGenePop(imgGeneRef, null);
+                        System.out.println("Finding gene "+geneRefDots.getNbObjects()+" reference dots");
+
+                        //Find gene X dots                     
                         
                         /*
                         * Open Channel 3 (gene X)
@@ -101,8 +107,12 @@ public class RNA_Scope_Omero implements PlugIn {
                         ImagePlus imgGeneX = getImageZ(image, 1, channelIndex + 1, zStart, zStop).getImagePlus();
 
                         // Find gene X dots
-                        Objects3DPopulation geneXDots = process.findGenePop(imgGeneX, null, "Isodata");
-                        System.out.println(geneXDots.getNbObjects() + " gene dots X found");
+                        Objects3DPopulation geneXDots = new Objects3DPopulation();
+                        if (main.geneSegMethod.equals("StarDist"))
+                            geneXDots = process.stardistGenePop(imgGeneX, null);
+                        else
+                            geneXDots = process.findGenePop(imgGeneX, null);
+                        System.out.println("Finding gene "+geneXDots.getNbObjects()+" X dots");
                         
                         // find background from roi
                         Roi roiGeneRef = null, roiGeneX = null;
@@ -151,7 +161,10 @@ public class RNA_Scope_Omero implements PlugIn {
 
 
                         Objects3DPopulation cellsPop = new Objects3DPopulation();
-                        cellsPop = process.findNucleus(imgNuc);
+                        if (main.nucSegMethod.equals("StarDist"))
+                            cellsPop = process.stardistNucleiPop(imgNuc);
+                        else
+                            cellsPop = process.findNucleus(imgNuc);
 
                         // Find cells parameters in geneRef and geneX images
                         ArrayList<Cell> listCells = process.tagsCells(cellsPop, geneRefDots, geneXDots, imgGeneRef, imgGeneX, roiGeneRef, roiGeneX);

@@ -47,6 +47,7 @@ import mcib3d.geom.Object3D;
 import mcib3d.geom.Objects3DPopulation;
 import mcib3d.image3d.ImageHandler;
 import org.apache.commons.io.FilenameUtils;
+import pal.math.MersenneTwisterFast;
 
 
 /**
@@ -61,6 +62,7 @@ private String outDirResults = "";
 public final ImageIcon icon = new ImageIcon(this.getClass().getResource("/Orion_icon.png"));
 private String thMet = "Moments";
 private boolean stardist = false;
+
 private RNA_Scope_Utils.RNA_Scope_Processing process = new RNA_Scope_Utils.RNA_Scope_Processing();
 private RNA_Scope_Utils.Image_Utils utils = new RNA_Scope_Utils.Image_Utils();
 private RNA_Scope.RNA_Scope_Main main = new RNA_Scope.RNA_Scope_Main();
@@ -115,6 +117,7 @@ private RNA_Scope.RNA_Scope_Main main = new RNA_Scope.RNA_Scope_Main();
      * @return ch
      */
     public ArrayList dialog(List<String> channels) {
+        String[] models = process.findStardistModels();
         ArrayList ch = new ArrayList();
         String[] thMethods = new Thresholder().methods;
         String[] channel = channels.toArray(new String[channels.size()]);
@@ -133,8 +136,12 @@ private RNA_Scope.RNA_Scope_Main main = new RNA_Scope.RNA_Scope_Main();
         if (channels.size() == 3) 
             gd.addNumericField("Gene reference single dot mean intensity : ", main.singleDotIntGeneRef, 0);
         gd.addNumericField("Gene X single dot mean intensity : ", main.singleDotIntGeneX, 0);
+        gd.addMessage("Dots segmentation",Font.getFont("Monospace"), Color.blue); 
         gd.addChoice("Dots threshold method : ", thMethods, thMet);
+        gd.addNumericField("Min dot size : ", process.minDots, 2);
+        gd.addNumericField("Max dot size : ", process.maxDots, 2);
         gd.addCheckbox("Stardist detection", stardist);
+        gd.addChoice("Stardist models for Genes : ", models, models[1]);
         gd.showDialog();
         ch.add(0, gd.getNextChoice());
         if (channels.size() == 3) {
@@ -147,7 +154,10 @@ private RNA_Scope.RNA_Scope_Main main = new RNA_Scope.RNA_Scope_Main();
             main.singleDotIntGeneRef = gd.getNextNumber();
         main.singleDotIntGeneX = gd.getNextNumber();
         thMet = gd.getNextChoice();
+        process.minDots = gd.getNextNumber();
+        process.maxDots = gd.getNextNumber();
         stardist = gd.getNextBoolean();
+        process.stardistModelGenes = process.modelsPath+File.separator+gd.getNextChoice();
         if(gd.wasCanceled())
             ch = null;
         return(ch);
@@ -349,7 +359,7 @@ private RNA_Scope.RNA_Scope_Main main = new RNA_Scope.RNA_Scope_Main();
                                 if (stardist)
                                     geneRefPop = process.stardistGenePop(imgGeneRef, roi);
                                 else            
-                                    geneRefPop = process.findGenePop(imgGeneRef, roi, thMet);
+                                    geneRefPop = process.findGenePop(imgGeneRef, roi);
                                 System.out.println(geneRefPop.getNbObjects()+ " genes ref found");
                             }
                             
@@ -364,7 +374,7 @@ private RNA_Scope.RNA_Scope_Main main = new RNA_Scope.RNA_Scope_Main();
                             if (stardist)
                                     geneXPop = process.stardistGenePop(imgGeneX, roi);
                                 else            
-                                    geneXPop = process.findGenePop(imgGeneX, roi, thMet);
+                                    geneXPop = process.findGenePop(imgGeneX, roi);
                             System.out.println(geneXPop.getNbObjects()+ " genes X found");
                             
                             // corrected value    
@@ -403,7 +413,6 @@ private RNA_Scope.RNA_Scope_Main main = new RNA_Scope.RNA_Scope_Main();
                     process.closeImages(imgGeneX);
                 }
             }
-            process.deleteTmpModelFileStarDist();
             output_Analyze.close();
             IJ.showStatus("Process done ...");
         } catch (DependencyException | ServiceException | FormatException | IOException ex) {

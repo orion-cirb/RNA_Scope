@@ -32,14 +32,18 @@ public class RNA_Scope_Main implements PlugIn {
     public boolean dialogCancel = false;
     public List<String> channels = new ArrayList<>();
     public String autoBackground = "";
-    public String thMethod = "";
-    public double singleDotIntGeneRef = 0, singleDotIntGeneX = 0, minNucVol = 50, calibBgGeneRef = 0, calibBgGeneX = 0,
-    maxNucVol = 900;
+    public String nucThMethod = "Huang", geneThMethod = "Isodata";
+    public double singleDotIntGeneRef = 0, singleDotIntGeneX = 0;
+    public double minNucVol = 50, maxNucVol = 900;
+    public double calibBgGeneRef = 0, calibBgGeneX = 0;
+    public double minGeneVol = 0.01, maxGeneVol = 50;
+    public double DOGMin = 2, DOGMax = 4;
     public int roiBgSize = 100;
     public float nucDil = 3;
     public int removeSlice = 0;
     public boolean nucNumber = true;
-    public String segMethod = "StarDist";
+    public String nucSegMethod = "StarDist";
+    public String geneSegMethod = "StarDist";
        
     /**
      * 

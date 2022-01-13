@@ -146,7 +146,7 @@ private Calibration cal;
                     // if DeepL segmente nucleus with StarDist else find cells with cellOutliner
                     // else dilate nucleus
                     Objects3DPopulation cellsPop = new Objects3DPopulation();
-                    if (main.segMethod.equals("StarDist"))
+                    if (main.nucSegMethod.equals("StarDist"))
                         cellsPop = process.stardistNucleiPop(imgNuc);
                     else
                         cellsPop = process.findNucleus(imgNuc);
@@ -156,11 +156,19 @@ private Calibration cal;
                     process.saveCells(imgNuc, cellsPop, outDirResults, rootName);
 
                     // Find gene reference dots
-                    Objects3DPopulation geneRefDots = process.findGenePop(imgGeneRef, null, "Isodata");
+                    Objects3DPopulation geneRefDots = new Objects3DPopulation();
+                    if (main.geneSegMethod.equals("StarDist"))
+                        geneRefDots = process.stardistGenePop(imgGeneRef, null);
+                    else
+                        geneRefDots = process.findGenePop(imgGeneRef, null);
                     System.out.println("Finding gene "+geneRefDots.getNbObjects()+" reference dots");
 
                     //Find gene X dots
-                    Objects3DPopulation geneXDots = process.findGenePop(imgGeneX, null, "Isodata");
+                    Objects3DPopulation geneXDots = new Objects3DPopulation();
+                    if (main.geneSegMethod.equals("StarDist"))
+                        geneXDots = process.stardistGenePop(imgGeneX, null);
+                    else
+                        geneXDots = process.findGenePop(imgGeneX, null);
                     System.out.println("Finding gene "+geneXDots.getNbObjects()+" X dots");
 
                     
