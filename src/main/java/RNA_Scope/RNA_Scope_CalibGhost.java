@@ -189,7 +189,7 @@ private RNA_Scope_Utils.RNA_Scope_Processing process = new RNA_Scope_Utils.RNA_S
                         System.out.println("Pointed dots found = "+dotsCenter.size());
                         
                         // 3D dots segmentation
-                        Objects3DPopulation dotsPop = process.findGenePop(img, null);
+                        Objects3DPopulation dotsPop = process.findGenePop(img, null, false);
                         System.out.println("Total dots found = "+dotsPop.getNbObjects());
                         
                         

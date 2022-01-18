@@ -359,7 +359,7 @@ private RNA_Scope.RNA_Scope_Main main = new RNA_Scope.RNA_Scope_Main();
                                 if (stardist)
                                     geneRefPop = process.stardistGenePop(imgGeneRef, roi);
                                 else            
-                                    geneRefPop = process.findGenePop(imgGeneRef, roi);
+                                    geneRefPop = process.findGenePop(imgGeneRef, roi, true);
                                 System.out.println(geneRefPop.getNbObjects()+ " genes ref found");
                             }
                             
@@ -374,7 +374,7 @@ private RNA_Scope.RNA_Scope_Main main = new RNA_Scope.RNA_Scope_Main();
                             if (stardist)
                                     geneXPop = process.stardistGenePop(imgGeneX, roi);
                                 else            
-                                    geneXPop = process.findGenePop(imgGeneX, roi);
+                                    geneXPop = process.findGenePop(imgGeneX, roi, true);
                             System.out.println(geneXPop.getNbObjects()+ " genes X found");
                             
                             // corrected value    

@@ -169,7 +169,7 @@ public class RNA_Scope_Processing {
      * @return pop
      */
 
-    private Objects3DPopulation getPopFromClearBuffer(ClearCLBuffer imgCL, Roi roi) {
+    private Objects3DPopulation getPopFromClearBuffer(ClearCLBuffer imgCL, Roi roi, boolean filter) {
         ClearCLBuffer output = clij2.create(imgCL);
         clij2.connectedComponentsLabelingBox(imgCL, output);
         ImagePlus imgLab  = clij2.pull(output);
@@ -178,11 +178,13 @@ public class RNA_Scope_Processing {
             roi.setLocation(0, 0);
             clearOutSide(imgLab, roi);
         }   
-        Objects3DPopulation pop = new Objects3DPopulation(imgLab);
-        Objects3DPopulation popFil = new Objects3DPopulation(pop.getObjectsWithinVolume(minDots, maxDots, true));
-        pop = null;
+        Objects3DPopulation pop = new Objects3DPopulation();
+        if (filter)
+            pop = new Objects3DPopulation(getPopFromImage(imgLab).getObjectsWithinVolume(minDots, maxDots, true));
+        else
+            pop = getPopFromImage(imgLab);
         clij2.release(output);
-        return (popFil);
+        return (pop);
     }  
     
     
@@ -290,7 +292,7 @@ public class RNA_Scope_Processing {
      * @param imgGeneRef
      * @return genePop
      */
-    public Objects3DPopulation findGenePop(ImagePlus imgGeneRef, Roi roi) {
+    public Objects3DPopulation findGenePop(ImagePlus imgGeneRef, Roi roi, boolean filter) {
         cal = imgGeneRef.getCalibration();
         ImagePlus img = new Duplicator().run(imgGeneRef);
         ClearCLBuffer imgCL = clij2.push(img);
@@ -300,7 +302,7 @@ public class RNA_Scope_Processing {
         clij2.release(imgCLMed);
         ClearCLBuffer imgCLBin = threshold(imgCLDOG, main.geneThMethod, false); 
         clij2.release(imgCLDOG);
-        Objects3DPopulation genePop = getPopFromClearBuffer(imgCLBin, roi);
+        Objects3DPopulation genePop = getPopFromClearBuffer(imgCLBin, roi, filter);
         clij2.release(imgCLBin);       
         return(genePop);
     }

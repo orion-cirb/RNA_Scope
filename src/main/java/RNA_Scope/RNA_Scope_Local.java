@@ -160,7 +160,7 @@ private Calibration cal;
                     if (main.geneSegMethod.equals("StarDist"))
                         geneRefDots = process.stardistGenePop(imgGeneRef, null);
                     else
-                        geneRefDots = process.findGenePop(imgGeneRef, null);
+                        geneRefDots = process.findGenePop(imgGeneRef, null, true);
                     System.out.println("Finding gene "+geneRefDots.getNbObjects()+" reference dots");
 
                     //Find gene X dots
@@ -168,7 +168,7 @@ private Calibration cal;
                     if (main.geneSegMethod.equals("StarDist"))
                         geneXDots = process.stardistGenePop(imgGeneX, null);
                     else
-                        geneXDots = process.findGenePop(imgGeneX, null);
+                        geneXDots = process.findGenePop(imgGeneX, null, true);
                     System.out.println("Finding gene "+geneXDots.getNbObjects()+" X dots");
 
                     

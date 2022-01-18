@@ -47,6 +47,7 @@ private String outDirResults = "";
 private final Calibration cal = new Calibration();   
 private BufferedWriter output_dotCalib;
 private RNA_Scope_Utils.RNA_Scope_Processing process = new RNA_Scope_Utils.RNA_Scope_Processing();
+
     /**
      * Find pointed single dots in dotsPop population
      * @param arg 
@@ -55,15 +56,12 @@ private RNA_Scope_Utils.RNA_Scope_Processing process = new RNA_Scope_Utils.RNA_S
         ImageHandler imh = ImageHandler.wrap(img);
         ArrayList<Dot> dots = new ArrayList();
         int index = 0;
-        for (Point3D pt : pts) {
-            for (int i = 0; i < dotsPop.getNbObjects(); i++) {
-                Object3D dotObj = dotsPop.getObject(i);
-                if(dotObj.inside(pt.getRoundX(), pt.getRoundY(), pt.getRoundZ())) {
-                    Dot dot = new Dot(index, dotObj.getVolumePixels(), dotObj.getIntegratedDensity(imh), dotObj.getZmin(), dotObj.getZmax(),dotObj.getCenterZ());
-                    dots.add(dot);
-                    pointedDotsPop.addObject(dotObj);
-                    dotsPop.removeObject(dotObj);
-                }
+        for (int i = 0; i < dotsPop.getNbObjects(); i++) {
+            Object3D dotObj = dotsPop.getObject(i);
+            if(dotObj.insideOne(pts)) {
+                Dot dot = new Dot(index, dotObj.getVolumePixels(), dotObj.getIntegratedDensity(imh), dotObj.getZmin()+1, dotObj.getZmax()-1,dotObj.getCenterZ());
+                dots.add(dot);
+                pointedDotsPop.addObject(dotObj);
             }
             index++;
         }
@@ -101,13 +99,15 @@ private RNA_Scope_Utils.RNA_Scope_Processing process = new RNA_Scope_Utils.RNA_S
      * @param outDirResults
      * @param rootName
      */
-    public void saveDotsImage (ImagePlus img, Objects3DPopulation dotsPop, String outDirResults, String rootName) {
+    public void saveDotsImage (ImagePlus img, Objects3DPopulation dotsAllPop, Objects3DPopulation dotsPop, String outDirResults, String rootName) {
         // red dots geneRef , dots green geneX, blue nucDilpop
         ImageHandler imgDots = ImageHandler.wrap(img).createSameDimensions();
+        ImageHandler imgAllDots = imgDots.createSameDimensions();
         // draw dots population
         dotsPop.draw(imgDots, 255);
+        dotsAllPop.draw(imgAllDots, 255);
         labelsObject(dotsPop, imgDots.getImagePlus(), 12);
-        ImagePlus[] imgColors = {null, imgDots.getImagePlus(), null, img.duplicate()};
+        ImagePlus[] imgColors = {imgAllDots.getImagePlus(), imgDots.getImagePlus(), null, img.duplicate()};
         ImagePlus imgObjects = new RGBStackMerge().mergeHyperstacks(imgColors, false);
         IJ.run(imgObjects, "Enhance Contrast", "saturated=0.35");
 
@@ -187,10 +187,8 @@ private RNA_Scope_Utils.RNA_Scope_Processing process = new RNA_Scope_Utils.RNA_S
                         System.out.println("Pointed dots found = "+dotsCenter.size());
                         
                         // 3D dots segmentation
-                        Objects3DPopulation dotsPop = process.findGenePop(img, null);
+                        Objects3DPopulation dotsPop = process.findGenePop(img, null, false);
                         System.out.println("Total dots found = "+dotsPop.getNbObjects());
-                        
-                        
                         
                         // find pointed dots in dotsPop
                         Objects3DPopulation pointedDotsPop = new Objects3DPopulation();
@@ -199,7 +197,7 @@ private RNA_Scope_Utils.RNA_Scope_Processing process = new RNA_Scope_Utils.RNA_S
                         System.out.println("Associated dots = "+dots.size());
                         
                         // Save dots
-                        saveDotsImage (img, pointedDotsPop, outDirResults, rootName);
+                        saveDotsImage (img, dotsPop, pointedDotsPop, outDirResults, rootName);
                         
                         // for all rois
                         // find background associated to dot
