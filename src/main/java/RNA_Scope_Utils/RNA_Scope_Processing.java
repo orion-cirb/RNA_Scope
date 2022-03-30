@@ -281,8 +281,7 @@ public class RNA_Scope_Processing {
      */
     public Objects3DPopulation findGenePop(ImagePlus imgGeneRef, Roi roi, boolean filter) {
         cal = imgGeneRef.getCalibration();
-        ImagePlus img = new Duplicator().run(imgGeneRef);
-        ClearCLBuffer imgCL = clij2.push(img);
+        ClearCLBuffer imgCL = clij2.push(imgGeneRef);
         ClearCLBuffer imgCLMed = medianFilter(imgCL, 1, 1, 1);
         clij2.release(imgCL);
         ClearCLBuffer imgCLDOG = DOG(imgCLMed, main.DOGMin, main.DOGMin, main.DOGMin, main.DOGMax, main.DOGMax, main.DOGMax);
@@ -496,11 +495,12 @@ public class RNA_Scope_Processing {
      * Find gene population with Stardist
      */
     public Objects3DPopulation stardistGenePop(ImagePlus imgGene, Roi roi) throws IOException{
-        roi.setLocation(0, 0);
-        imgGene.setRoi(roi);
+        if (roi != null) {
+            roi.setLocation(0, 0);
+            imgGene.setRoi(roi);
+        }
         cal = imgGene.getCalibration();
-        ImagePlus img = new Duplicator().run(imgGene);
-        ClearCLBuffer imgCL = clij2.push(img);
+        ClearCLBuffer imgCL = clij2.push(imgGene);
         ClearCLBuffer imgCLMed = medianFilter(imgCL, 1, 1, 1);
         clij2.release(imgCL);
         ImagePlus imgGeneMed = clij2.pull(imgCLMed);
@@ -525,7 +525,7 @@ public class RNA_Scope_Processing {
         closeImages(imgGeneLab);
         closeImages(imgGeneMed);
         return(genePop);
-        }
+}
     
     
 /** Look for all nuclei
@@ -534,19 +534,31 @@ public class RNA_Scope_Processing {
          */
         public Objects3DPopulation stardistNucleiPop(ImagePlus imgNuc) throws IOException{
             cal = imgNuc.getCalibration();
-            IJ.run(imgNuc, "Remove Outliers", "block_radius_x=40 block_radius_y=40 standard_deviations=1 stack");
+            ImagePlus img = null;
+            // resize to be in a stardist-friendly scale
+            int width = imgNuc.getWidth();
+            int height = imgNuc.getHeight();
+            float factor = 0.25f;
+            boolean resized = false;
+            if (imgNuc.getWidth() > 512) {
+                img = imgNuc.resize((int)(width*factor), (int)(height*factor), 1, "none");
+                resized = true;
+            }
+            else
+                img = new Duplicator().run(imgNuc);
+            IJ.run(img, "Remove Outliers", "block_radius_x=40 block_radius_y=40 standard_deviations=1 stack");
             // Clear unfocus Z plan
             Find_focused_slices focus = new Find_focused_slices();
-            focus.run(imgNuc);
+            focus.run(img);
             // Go StarDist
             File starDistModelFile = new File(main.stardistModelNucleus);
             StarDist2D star = new StarDist2D(syncObject, starDistModelFile);
-            star.loadInput(imgNuc);
+            star.loadInput(img);
             star.setParams(stardistPercentileBottom, stardistPercentileTop, stardistProbThreshNuc, stardistOverlayThreshNuc, stardistOutput);
             star.run();
+            closeImages(img);
             // label in 3D
-            ImagePlus nuclei = star.associateLabels();
-            nuclei.setCalibration(cal);
+            ImagePlus nuclei = (resized) ? star.associateLabels().resize(width, height, 1, "none") : star.associateLabels();
             ImageInt label3D = ImageInt.wrap(nuclei);
             label3D.setCalibration(cal);
             Objects3DPopulation nucPop = new Objects3DPopulation(label3D);
