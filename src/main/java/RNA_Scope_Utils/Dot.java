@@ -11,14 +11,14 @@ package RNA_Scope_Utils;
  */
 public class Dot {
     private int index;
-    private int volDot;
+    private double volDot;
     private double intDot;
     private int zMin;
     private int zMax;
     private double zCenter;
    
 	
-	public Dot(int index, int volDot, double intDot, int zMin, int zMax, double zCenter) {
+	public Dot(int index, double volDot, double intDot, int zMin, int zMax, double zCenter) {
             this.index = index;
             this.volDot = volDot;
             this.intDot = intDot;
@@ -31,7 +31,7 @@ public class Dot {
 		this.index = index;
 	}
         
-        public void setVolDot(int volDot) {
+        public void setVolDot(double volDot) {
 		this.volDot = volDot;
 	}
                 
@@ -51,7 +51,7 @@ public class Dot {
             return index;
         }
         
-        public int getVolDot() {
+        public double getVolDot() {
             return volDot;
         }
         

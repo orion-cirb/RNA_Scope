@@ -31,6 +31,13 @@ import javax.xml.parsers.ParserConfigurationException;
 import mcib3d.geom.Object3D;
 import mcib3d.geom.Objects3DPopulation;
 import mcib3d.geom.Point3D;
+import mcib3d.geom.Point3DInt;
+import mcib3d.geom2.BoundingBox;
+import mcib3d.geom2.Object3DComputation;
+import mcib3d.geom2.Object3DInt;
+import mcib3d.geom2.Objects3DIntPopulation;
+import mcib3d.geom2.measurements.MeasureIntensity;
+import mcib3d.geom2.measurements.MeasureVolume;
 import mcib3d.image3d.ImageHandler;
 import org.apache.commons.io.FilenameUtils;
 import org.xml.sax.SAXException;
@@ -46,22 +53,30 @@ private String imageDir = "";
 private String outDirResults = "";
 private final Calibration cal = new Calibration();   
 private BufferedWriter output_dotCalib;
-private RNA_Scope_Utils.RNA_Scope_Processing process = new RNA_Scope_Utils.RNA_Scope_Processing();
+private RNA_Scope_Utils.RNA_Scope_Tools tools = new RNA_Scope_Utils.RNA_Scope_Tools();
 
     /**
      * Find pointed single dots in dotsPop population
      * @param arg 
      */
-    private ArrayList<Dot> findSingleDots(ArrayList<Point3D> pts, Objects3DPopulation dotsPop, Objects3DPopulation pointedDotsPop, ImagePlus img) {
+    private ArrayList<Dot> findSingleDots(ArrayList<Point3DInt> pts, Objects3DIntPopulation dotsPop, Objects3DIntPopulation pointedDotsPop, ImagePlus img) {
         ImageHandler imh = ImageHandler.wrap(img);
         ArrayList<Dot> dots = new ArrayList();
         int index = 0;
-        for (int i = 0; i < dotsPop.getNbObjects(); i++) {
-            Object3D dotObj = dotsPop.getObject(i);
-            if(dotObj.insideOne(pts)) {
-                Dot dot = new Dot(index, dotObj.getVolumePixels(), dotObj.getIntegratedDensity(imh), dotObj.getZmin()+1, dotObj.getZmax()-1,dotObj.getCenterZ());
-                dots.add(dot);
-                pointedDotsPop.addObject(dotObj);
+        for (Object3DInt dotObj : dotsPop.getObjects3DInt()) {
+            BoundingBox bbox = dotObj.getBoundingBox();
+            for (Point3DInt pt : pts) {
+                if(bbox.contains(pt)) {
+                    double dotVol = new MeasureVolume(dotObj).getVolumePix();
+                    double dotInt = new MeasureIntensity(dotObj, imh).getValueMeasurement(MeasureIntensity.INTENSITY_SUM);
+                    int zMin = bbox.zmin + 1;
+                    int zMax = bbox.zmax + 1;
+                    double center = bbox.zmax - bbox.zmin;
+                    Dot dot = new Dot(index, dotVol, dotInt, zMin, zMax, center);
+                    dots.add(dot);
+                    pointedDotsPop.addObject(dotObj);
+                }
+                
             }
             index++;
         }
@@ -74,20 +89,18 @@ private RNA_Scope_Utils.RNA_Scope_Processing process = new RNA_Scope_Utils.RNA_S
      * @param popObj
      * @param img 
      */
-    private void labelsObject (Objects3DPopulation popObj, ImagePlus img, int fontSize) {
+    private void labelsObject (Objects3DIntPopulation popObj, ImagePlus img, int fontSize) {
         Font tagFont = new Font("SansSerif", Font.PLAIN, fontSize);
-        String name;
-        for (int n = 0; n < popObj.getNbObjects(); n++) {
-            Object3D obj = popObj.getObject(n);
-            int[] box = obj.getBoundingBox();
-            int z = (int)obj.getCenterZ();
-            int x = box[0] - 2;
-            int y = box[2] - 2;
+        for (Object3DInt obj : popObj.getObjects3DInt()) {
+            BoundingBox box = obj.getBoundingBox();
+            int z = box.zmax - box.zmin;
+            int x = box.xmin - 2;
+            int y = box.ymin - 2;
             img.setSlice(z+1);
             ImageProcessor ip = img.getProcessor();
             ip.setFont(tagFont);
             ip.setColor(255);
-            ip.drawString(String.valueOf(n), x, y);
+            ip.drawString(String.valueOf(obj.getLabel()), x, y);
             img.updateAndDraw();
         }
     }
@@ -99,14 +112,13 @@ private RNA_Scope_Utils.RNA_Scope_Processing process = new RNA_Scope_Utils.RNA_S
      * @param outDirResults
      * @param rootName
      */
-    public void saveDotsImage (ImagePlus img, Objects3DPopulation dotsAllPop, Objects3DPopulation dotsPop, String outDirResults, String rootName) {
+    public void saveDotsImage (ImagePlus img, Objects3DIntPopulation dotsAllPop, Objects3DIntPopulation dotsPop, String outDirResults, String rootName) {
         // red dots geneRef , dots green geneX, blue nucDilpop
         ImageHandler imgDots = ImageHandler.wrap(img).createSameDimensions();
         ImageHandler imgAllDots = imgDots.createSameDimensions();
         // draw dots population
-        dotsPop.draw(imgDots, 255);
-        dotsAllPop.draw(imgAllDots, 255);
-        labelsObject(dotsPop, imgDots.getImagePlus(), 12);
+        dotsPop.drawInImage(imgDots);
+        dotsAllPop.drawInImage(imgAllDots);
         ImagePlus[] imgColors = {imgAllDots.getImagePlus(), imgDots.getImagePlus(), null, img.duplicate()};
         ImagePlus imgObjects = new RGBStackMerge().mergeHyperstacks(imgColors, false);
         IJ.run(imgObjects, "Enhance Contrast", "saturated=0.35");
@@ -158,7 +170,7 @@ private RNA_Scope_Utils.RNA_Scope_Processing process = new RNA_Scope_Utils.RNA_S
                         FileWriter  fwAnalyze_detail = new FileWriter(outDirResults + "dotsCalibration_results.xls",false);
                         output_dotCalib = new BufferedWriter(fwAnalyze_detail);
                         // write results headers
-                        output_dotCalib.write("Image Name\t#Dot\tDot Vol (pixel3)\tDot Integrated Intensity\tMean Dot Background intensity\t"
+                        output_dotCalib.write("Image Name\t#Dot\tDot Vol (pixel3)\tDot Integrated Intensity\tMedian Dot Background intensity\t"
                                 + "Corrected Dots Integrated Intensity\tDot Z center\tDot Z range\tMean intensity per single dot\n");
                         output_dotCalib.flush();
                     }
@@ -183,15 +195,15 @@ private RNA_Scope_Utils.RNA_Scope_Processing process = new RNA_Scope_Utils.RNA_S
                         rm.runCommand("Open", roiFile);
                         
                         // Read dots coordinates in xml file
-                        ArrayList<Point3D> dotsCenter = process.readXML(xmlFile);
+                        ArrayList<Point3DInt> dotsCenter = tools.readXML(xmlFile);
                         System.out.println("Pointed dots found = "+dotsCenter.size());
                         
                         // 3D dots segmentation
-                        Objects3DPopulation dotsPop = process.findGenePop(img, null, false);
+                        Objects3DIntPopulation dotsPop = tools.stardistGenePop(img, null);
                         System.out.println("Total dots found = "+dotsPop.getNbObjects());
                         
                         // find pointed dots in dotsPop
-                        Objects3DPopulation pointedDotsPop = new Objects3DPopulation();
+                        Objects3DIntPopulation pointedDotsPop = new Objects3DIntPopulation();
 
                         ArrayList<Dot> dots = findSingleDots(dotsCenter, dotsPop, pointedDotsPop, img);
                         System.out.println("Associated dots = "+dots.size());
@@ -206,14 +218,14 @@ private RNA_Scope_Utils.RNA_Scope_Processing process = new RNA_Scope_Utils.RNA_S
                             Roi roi = rm.getRoi(dot.getIndex());
                             img.setRoi(roi);
                             ImagePlus imgCrop = img.crop("stack");
-                            double bgDotInt = process.find_background(imgCrop, dot.getZmin(), dot.getZmax());
+                            double bgDotInt = tools.findBackground(imgCrop, dot.getZmin(), dot.getZmax());
                             double corIntDot = dot.getIntDot() - (bgDotInt * dot.getVolDot());
                             sumCorIntDots += corIntDot;
                             // write results
                             output_dotCalib.write(rootName+"\t"+dot.getIndex()+"\t"+dot.getVolDot()+"\t"+dot.getIntDot()+"\t"+bgDotInt+"\t"+corIntDot+
                                     "\t"+dot.getZCenter()+"\t"+(dot.getZmax()-dot.getZmin())+"\n");
                             output_dotCalib.flush();
-                            process.closeImages(imgCrop);
+                            tools.flush_close(imgCrop);
                         }
                         double MeanIntDot = sumCorIntDots / rm.getCount();
                         output_dotCalib.write("\t\t\t\t\t\t\t\t"+MeanIntDot+"\n");

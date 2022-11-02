@@ -6,10 +6,10 @@
 	<modelVersion>4.0.0</modelVersion>
         
 	<groupId>cirb</groupId>
-	<artifactId>mRNA_Scope_Omero</artifactId>
+	<artifactId>mRNA_Scope</artifactId>
 	<version>1.7.0</version>
         <packaging>jar</packaging>
-	<name>plugins/mRNA_Scope_Omero</name>
+	<name>plugins/mRNA_Scope</name>
 	<description>
             Detection dots in nucleus associated to gene and or virus channels
         </description>
@@ -72,14 +72,7 @@
                 <groupId>ome</groupId>
                 <artifactId>bio-formats_plugins</artifactId>
                 <version>6.8.1</version>
-            </dependency>
-            
-            <dependency>
-                <groupId>org.framagit.mcib3d</groupId>
-                <artifactId>mcib3d-core</artifactId>
-                <version>4.0.63</version>
-                <type>jar</type>
-            </dependency>
+            </dependency>          
             
             <dependency>
                     <groupId>ome</groupId>
@@ -87,7 +80,6 @@
                     <version>5.2.4</version>
                     <type>jar</type>
              </dependency>  
-                          
             <dependency>
                   <groupId>net.haesleinhuepf</groupId>
                   <artifactId>clij-clearcl</artifactId>
@@ -115,40 +107,18 @@
                 <version>20120621</version>
                 <type>jar</type>
             </dependency>
-                 <dependency>
-                    <groupId>org.openmicroscopy</groupId>
-                    <artifactId>omero-gateway</artifactId>
-                    <version>5.5.4</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.hsqldb</groupId>
-                    <artifactId>hsqldb</artifactId>
-                    <version>2.4.0</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>omero</groupId>
-                    <artifactId>model-psql</artifactId>
-                    <version>5.5.0-m1-ice36-b102</version>
-                    <scope>compile</scope>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>hsqldb</groupId>
-                            <artifactId>hsqldb</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-                <dependency>
-                  <groupId>uk.ac.sussex.gdsc</groupId>
-                  <artifactId>gdsc-core</artifactId>
-                  <version>2.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>sc.fiji</groupId>
-                    <artifactId>Calculator_Plus</artifactId>
-                    <version>2.0.2-SNAPSHOT</version>
-                    <type>jar</type>
-                </dependency>	 
+            <dependency>
+                <groupId>sc.fiji</groupId>
+                <artifactId>Calculator_Plus</artifactId>
+                <version>2.0.2-SNAPSHOT</version>
+                <type>jar</type>
+            </dependency>
+	 <dependency>
+	  <groupId>mcib</groupId>
+	  <artifactId>mcib3d-core</artifactId>
+	  <version>4.0.93</version>
+	  <type>jar</type>
+	 </dependency>
 	</dependencies>
         <repositories>
             <repository>
