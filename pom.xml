@@ -7,7 +7,7 @@
         
 	<groupId>cirb</groupId>
 	<artifactId>mRNA_Scope</artifactId>
-	<version>1.7.0</version>
+	<version>2.0</version>
         <packaging>jar</packaging>
 	<name>plugins/mRNA_Scope</name>
 	<description>
