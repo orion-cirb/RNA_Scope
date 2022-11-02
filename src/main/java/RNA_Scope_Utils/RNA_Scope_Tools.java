@@ -470,14 +470,17 @@ public class RNA_Scope_Tools {
             double geneXVol = findGenesVolume(nucLabel, geneXPop);
             int nbGeneXDotsSegInt = Math.round((float)((geneXInt - roiBgGeneX.getBgInt() * geneXVol) / singleDotIntGeneX));
             int nbGeneYDotsSegInt = 0;
+            double geneYInt = 0;
+            double geneYVol = 0;
             if (imgGeneY != null) {
-                double geneYInt = findGenesIntensity(nucLabel, geneYPop, imhY);
-                double geneYVol = findGenesVolume(nucLabel, geneYPop);
+                geneYInt = findGenesIntensity(nucLabel, geneYPop, imhY);
+                geneYVol = findGenesVolume(nucLabel, geneYPop);
                 nbGeneYDotsSegInt =  Math.round((float)((geneYInt - roiBgGeneY.getBgInt() * geneYVol) / singleDotIntGeneY));
             }
             outPut.write(imgName+"\t"+nucLabel+"\t"+nucleusVol+"\t"+nucleusGeneRefInt+"\t"+roiBgGeneRef.getBgInt()+"\t"+nbGeneRefDotsNucleusInt
-                    +"\t"+geneRefVol+"\t"+geneRefInt+"\t"+nbGeneRefDotsSegInt+"\t"+nucleusGeneXInt+"\t"+roiBgGeneX.getBgInt()+"\t"+nbGeneXDotsNucleusInt
-                    +"\t"+geneXVol+"\t"+geneXInt+"\t"+nbGeneXDotsSegInt+"\t"+nucleusGeneYInt+"\t"+roiBgGeneY.getBgInt()+"\t"+nbGeneYDotsNucleusInt+"\n");
+                    +"\t"+geneRefVol*pixVol+"\t"+geneRefInt+"\t"+nbGeneRefDotsSegInt+"\t"+nucleusGeneXInt+"\t"+roiBgGeneX.getBgInt()+"\t"+nbGeneXDotsNucleusInt
+                    +"\t"+geneXVol*pixVol+"\t"+geneXInt+"\t"+nbGeneXDotsSegInt+"\t"+nucleusGeneYInt+"\t"+roiBgGeneY.getBgInt()+"\t"+nbGeneYDotsNucleusInt
+                    +"\t"+geneYVol*pixVol+"\t"+geneYInt+"\t"+nbGeneYDotsSegInt+"\t"+"\n");
             outPut.flush();
         }
     }
@@ -543,6 +546,8 @@ public class RNA_Scope_Tools {
         Objects3DIntPopulation genePop = new Objects3DIntPopulation(label3D);
         Objects3DIntPopulation popFilter = new Objects3DIntPopulationComputation(genePop).getFilterSize(minGeneVol/pixVol, maxGeneVol/pixVol);
         popFilter.resetLabels();
+        popFilter.setVoxelSizeXY(cal.pixelWidth);
+        popFilter.setVoxelSizeZ(cal.pixelDepth);
         return(popFilter);
 }
     
@@ -577,6 +582,8 @@ public class RNA_Scope_Tools {
             System.out.println(nucPop.getNbObjects() + " nucleus detections");
             Objects3DIntPopulation popFilter = new Objects3DIntPopulationComputation(nucPop).getFilterSize(minNucVol/pixVol, maxNucVol/pixVol);
             popFilter.resetLabels();
+            popFilter.setVoxelSizeXY(cal.pixelWidth);
+            popFilter.setVoxelSizeZ(cal.pixelDepth);
             flush_close(nuclei);
             if (nucDil != 0) {
                 System.out.println("Nucleus dilatation of "+nucDil+" microns");

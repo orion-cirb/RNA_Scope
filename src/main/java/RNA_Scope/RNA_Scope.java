@@ -90,12 +90,12 @@ private BufferedWriter results;
                 FileWriter  fwAnalyze_detail = new FileWriter(outDirResults + tools.bgDetection +"_results.xls",false);
                 BufferedWriter output_Analyze = new BufferedWriter(fwAnalyze_detail);
                 // write results headers
-                output_Analyze.write("Image Name\t#Nucleus\tNucleus Vol (pixel3)\tNucleus Integrated intensity in gene ref. channel\tMean background intensity in ref. channel\t"
-                        + "Total dots gene ref. (based on nucleus intensity)\tDots ref. volume (pixel3)\tIntegrated intensity of dots ref. channel\t"
+                output_Analyze.write("Image Name\t#Nucleus\tNucleus Vol (µm3)\tNucleus Integrated intensity in gene ref. channel\tMean background intensity in ref. channel\t"
+                        + "Total dots gene ref. (based on nucleus intensity)\tDots ref. volume (µm3)\tIntegrated intensity of dots ref. channel\t"
                         + "Total dots gene ref (based on dots seg intensity)\tNucleus Integrated intensity in gene X channel\tMean background intensity in X channel\t"
-                        + "Total dots gene X (based on nucleus intensity)\tDots X volume (pixel3)\tIntegrated intensity of dots X channel\t"
+                        + "Total dots gene X (based on nucleus intensity)\tDots X volume (µm3)\tIntegrated intensity of dots X channel\t"
                         + "Total dots gene X (based on dots seg intensity)\tNucleus Integrated intensity in gene Y channel\tMean background intensity in Y channel\t"
-                        + "Total dots gene Y (based on nucleus intensity)\tDots Y volume (pixel3)\tIntegrated intensity of dots Y channel\t"
+                        + "Total dots gene Y (based on nucleus intensity)\tDots Y volume (µm3)\tIntegrated intensity of dots Y channel\t"
                         + "Total dots gene Y (based on dots seg intensity)\n");
                 output_Analyze.flush();
             
