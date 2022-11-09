@@ -107,9 +107,7 @@ private BufferedWriter results;
                     options.setId(f);
                     options.setSplitChannels(true);
                     options.setQuiet(true);
-                    options.setCrop(true);
                     options.setColorMode(ImporterOptions.COLOR_MODE_GRAYSCALE);
-                    
                     
                     // Background detection methods
                     RoiBg roiGeneRef = new RoiBg(null, -1);
@@ -171,7 +169,7 @@ private BufferedWriter results;
                     if (tools.bgDetection.equals("Auto"))
                         roiGeneRef = tools.findRoiBackgroundAuto(imgGeneRef);
                     // find all genes Ref
-                    Objects3DIntPopulation genesRefPop = tools.stardistGenePop(imgGeneRef, null);
+                    Objects3DIntPopulation genesRefPop = (tools.genesDetection.equals("Stardist")) ? tools.stardistGenePop(imgGeneRef) : tools.findGenePop(imgGeneRef);
                     System.out.println(genesRefPop.getNbObjects()+ " ref genes found");
                     // find genes Ref in nuclei
                     int genesInNuc = tools.findGenesInNucleus(nucleusPop, genesRefPop);
@@ -186,7 +184,7 @@ private BufferedWriter results;
                     if (tools.bgDetection.equals("Auto"))
                         roiGeneX = tools.findRoiBackgroundAuto(imgGeneX);
                     // find all genes X
-                    Objects3DIntPopulation genesXPop = tools.stardistGenePop(imgGeneX, null);
+                    Objects3DIntPopulation genesXPop = (tools.genesDetection.equals("Stardist")) ? tools.stardistGenePop(imgGeneX) : tools.findGenePop(imgGeneX);
                     System.out.println(genesXPop.getNbObjects()+ " X genes found");
                     // find genes Ref in nuclei
                     genesInNuc = tools.findGenesInNucleus(nucleusPop, genesXPop);
@@ -204,9 +202,9 @@ private BufferedWriter results;
                         if (tools.bgDetection.equals("Auto"))
                             roiGeneY = tools.findRoiBackgroundAuto(imgGeneY);
                         // find all genes X
-                        genesYPop = tools.stardistGenePop(imgGeneY, null);
+                        genesYPop = (tools.genesDetection.equals("Stardist")) ? tools.stardistGenePop(imgGeneY) : tools.findGenePop(imgGeneY);
                         System.out.println(genesYPop.getNbObjects()+ " Y genes found");
-                        // find genes Ref in nrootNameuclei
+                        // find genes Ref in nuclei
                         genesInNuc = tools.findGenesInNucleus(nucleusPop, genesYPop);
                         System.out.println(genesInNuc+" gene Y found in nuclei");
                     }

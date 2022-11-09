@@ -28,12 +28,8 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.parsers.ParserConfigurationException;
-import mcib3d.geom.Object3D;
-import mcib3d.geom.Objects3DPopulation;
-import mcib3d.geom.Point3D;
 import mcib3d.geom.Point3DInt;
 import mcib3d.geom2.BoundingBox;
-import mcib3d.geom2.Object3DComputation;
 import mcib3d.geom2.Object3DInt;
 import mcib3d.geom2.Objects3DIntPopulation;
 import mcib3d.geom2.measurements.MeasureIntensity;
@@ -199,7 +195,7 @@ private RNA_Scope_Utils.RNA_Scope_Tools tools = new RNA_Scope_Utils.RNA_Scope_To
                         System.out.println("Pointed dots found = "+dotsCenter.size());
                         
                         // 3D dots segmentation
-                        Objects3DIntPopulation dotsPop = tools.stardistGenePop(img, null);
+                        Objects3DIntPopulation dotsPop = tools.stardistGenePop(img);
                         System.out.println("Total dots found = "+dotsPop.getNbObjects());
                         
                         // find pointed dots in dotsPop

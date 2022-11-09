@@ -7,10 +7,12 @@ import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Roi;
+import ij.gui.WaitForUserDialog;
 import ij.io.FileSaver;
 import ij.measure.Calibration;
 import ij.plugin.RGBStackMerge;
 import ij.plugin.ZProjector;
+import ij.process.AutoThresholder;
 import ij.process.ImageProcessor;
 import java.awt.Color;
 import java.awt.Font;
@@ -75,20 +77,23 @@ public class RNA_Scope_Tools {
     public Object syncObject = new Object();
     public final double stardistPercentileBottom = 0.2;
     public final double stardistPercentileTop = 99.8;
-    public final double stardistProbThreshNuc = 0.55;
+    public final double stardistProbThreshNuc = 0.70;
     public final double stardistOverlayThreshNuc = 0.4;
-    public final double stardistProbThreshDots = 0.7;
+    public final double stardistProbThreshDots = 0.2;
     public final double stardistOverlayThreshDots = 0.45;
     public File modelsPath = new File(IJ.getDirectory("imagej")+File.separator+"models");
     public String stardistOutput = "Label Image"; 
     public Calibration cal = new Calibration();
     private float pixVol = 0;
     
-    private double minNucVol = 50;
-    private double maxNucVol = 900;
-    private double nucDil = 5;
-    private double minGeneVol = 0.01;
-    private double maxGeneVol = 50;
+    public String genesDetection = "DOG";
+    private double DOGMin = 2;
+    private double DOGMax = 4;
+    
+    private double minNucVol = 250;
+    private double maxNucVol = 8000;
+    private double minGeneVol = 5;
+    private double maxGeneVol = 800;
     public String bgDetection = "";
     
     public String[] channelsName = {"DAPI", "Gene Ref", "Gene X", "Gene Y"};  
@@ -255,7 +260,8 @@ public class RNA_Scope_Tools {
     /**
      * Generate dialog box
      */
-    public String[] dialog(String[] channels) {  
+    public String[] dialog(String[] channels) { 
+        
         String[] models = findStardistModels();
         if (!Arrays.asList(models).contains(stardistModelNucleus) || !Arrays.asList(models).contains(stardistModelGenes)) {
             IJ.showMessage("Error", "Missing stardist models");
@@ -272,15 +278,17 @@ public class RNA_Scope_Tools {
         gd.addMessage("Nuclei size filter", Font.getFont("Monospace"), Color.blue);
         gd.addNumericField("Min nucleus volume (µm3) :", minNucVol);
         gd.addNumericField("Max nucleus volume (µm3) :", maxNucVol);
-        gd.addNumericField("Nucleus dilatation µm    :", nucDil);
         // genes
+        String[] genesDetections = {"Stardist", "DOG"};
+        gd.addMessage("Gene segmentation", Font.getFont("Monospace"), Color.blue);
+        gd.addChoice("Segmentation method" + " : ", genesDetections, genesDetections[1]);
         gd.addMessage("Gene size filter", Font.getFont("Monospace"), Color.blue);
         gd.addNumericField("Min gene volume (µm3) :", minGeneVol);
         gd.addNumericField("Max gene volume (µm3) :", maxGeneVol); 
         // Background detection
         String[] bgDetections = {"From rois", "Auto", "From calibration"};
         gd.addMessage("Background detection", Font.getFont("Monospace"), Color.blue);
-        gd.addChoice("Background method" + " : ", bgDetections, bgDetections[0]);
+        gd.addChoice("Background method" + " : ", bgDetections, bgDetections[1]);
         gd.addNumericField("background box size :", roiBgSize); 
         gd.addMessage("Background intensity from calibration", Font.getFont("Monospace"), Color.blue);
         gd.addNumericField("Gene ref intensity : ", calibBgGeneRef); 
@@ -304,7 +312,7 @@ public class RNA_Scope_Tools {
             ch = null;
         minNucVol = gd.getNextNumber();
         maxNucVol = gd.getNextNumber();
-        nucDil = gd.getNextNumber();
+        genesDetection = gd.getNextChoice();
         minGeneVol = gd.getNextNumber();
         maxGeneVol = gd.getNextNumber();
         bgDetection = gd.getNextChoice();
@@ -370,9 +378,9 @@ public class RNA_Scope_Tools {
             List<PairObjects3DInt> list = coloc.getPairsObject1(nucLabel, true);
             // no coloc for nucleus nucLabel
             if (list.size() != 0) {
-                list.forEach(P -> {
-                    Object3DInt geneObj = P.getObject3D2();
-                    if (P.getPairValue() > geneObj.size()*0.25) {
+                list.forEach(p -> {
+                    Object3DInt geneObj = p.getObject3D2();
+                    if (p.getPairValue() > geneObj.size()*0.25) {
                         geneObj.setIdObject(nucLabel);
                         ai.incrementAndGet();
                     }
@@ -383,15 +391,15 @@ public class RNA_Scope_Tools {
     } 
     
     /**
-     * Find backgrouns from rois
+     * Find background from rois
      */
     private void findBackgroundRois(ImagePlus imgGene, RoiBg roiBgGene) {
         IJ.showStatus("Finding background from rois ...");
         // find background for geneRef
         imgGene.setRoi(roiBgGene.getRoi());
-        ImagePlus imgGeneRefCrop = imgGene.crop("stack");
-        roiBgGene.setBgInt(findBackground(imgGeneRefCrop, 1,imgGeneRefCrop.getNSlices()));
-        flush_close(imgGeneRefCrop);
+        ImagePlus imgGeneCrop = imgGene.crop("stack");
+        roiBgGene.setBgInt(findBackground(imgGeneCrop, 1,imgGeneCrop.getNSlices()));
+        flush_close(imgGeneCrop);
     }
     
     /**
@@ -422,10 +430,19 @@ public class RNA_Scope_Tools {
     
     /**
      * write results gene spot, Integrated intensity and max spot Integrated intensty ....
-     * @param nucPop (nucleus dilated population)
+     * @param nucleusPop
+     * @param geneRefPop
+     * @param geneXPop
+     * @param geneYPop
      * @param imgGeneRef
      * @param imgGeneX
-     * @param imgGeneX
+     * @param imgGeneY
+     * @param roiBgGeneRef
+     * @param roiBgGeneX
+     * @param roiBgGeneY
+     * @param imgName
+     * @param outPut
+     * @throws java.io.IOException
      */
     
     public void writeResults(Objects3DIntPopulation nucleusPop, Objects3DIntPopulation geneRefPop, Objects3DIntPopulation geneXPop,
@@ -439,10 +456,10 @@ public class RNA_Scope_Tools {
         // crop image for background in case of manual rois
         if (roiBgGeneRef.getBgInt() == -1) {
             System.out.println("Finding background with manual rois);");
-            findBackgroundRois(imgGeneX, roiBgGeneRef);
             findBackgroundRois(imgGeneRef, roiBgGeneRef);
+            findBackgroundRois(imgGeneX, roiBgGeneX);
             if (imgGeneY == null) 
-                findBackgroundRois(imgGeneRef, roiBgGeneRef);
+                findBackgroundRois(imgGeneY, roiBgGeneY);
         }
        
         // For all nuclei compute parameters
@@ -469,14 +486,11 @@ public class RNA_Scope_Tools {
             double geneXInt = findGenesIntensity(nucLabel, geneXPop, imhX);
             double geneXVol = findGenesVolume(nucLabel, geneXPop);
             int nbGeneXDotsSegInt = Math.round((float)((geneXInt - roiBgGeneX.getBgInt() * geneXVol) / singleDotIntGeneX));
-            int nbGeneYDotsSegInt = 0;
-            double geneYInt = 0;
-            double geneYVol = 0;
-            if (imgGeneY != null) {
-                geneYInt = findGenesIntensity(nucLabel, geneYPop, imhY);
-                geneYVol = findGenesVolume(nucLabel, geneYPop);
-                nbGeneYDotsSegInt =  Math.round((float)((geneYInt - roiBgGeneY.getBgInt() * geneYVol) / singleDotIntGeneY));
-            }
+            
+            double geneYInt = (imgGeneY == null) ? 0 : findGenesIntensity(nucLabel, geneYPop, imhY);
+            double geneYVol = (imgGeneY == null) ? 0 : findGenesVolume(nucLabel, geneYPop);
+            int nbGeneYDotsSegInt = (imgGeneY == null) ? 0 : Math.round((float)((geneYInt - roiBgGeneY.getBgInt() * geneYVol) / singleDotIntGeneY));
+            
             outPut.write(imgName+"\t"+nucLabel+"\t"+nucleusVol+"\t"+nucleusGeneRefInt+"\t"+roiBgGeneRef.getBgInt()+"\t"+nbGeneRefDotsNucleusInt
                     +"\t"+geneRefVol*pixVol+"\t"+geneRefInt+"\t"+nbGeneRefDotsSegInt+"\t"+nucleusGeneXInt+"\t"+roiBgGeneX.getBgInt()+"\t"+nbGeneXDotsNucleusInt
                     +"\t"+geneXVol*pixVol+"\t"+geneXInt+"\t"+nbGeneXDotsSegInt+"\t"+nucleusGeneYInt+"\t"+roiBgGeneY.getBgInt()+"\t"+nbGeneYDotsNucleusInt
@@ -486,49 +500,108 @@ public class RNA_Scope_Tools {
     }
     
     /**
-     * Return dilated object restriced to image borders
-     * @param img
-     * @param obj
-     * @return 
+     * Remove object with only one plan
+     * @param pop
      */
-    private Object3DInt dilCellObj(ImageHandler imh, Object3DInt obj) {
-        Object3DInt objDil = new Object3DComputation(obj).getObjectDilated((float)(nucDil/cal.pixelWidth), (float)(nucDil/cal.pixelHeight), 
-                (float)(nucDil/cal.pixelDepth));
-        // check if object go outside image
-        BoundingBox bbox = objDil.getBoundingBox();
-        BoundingBox imgBbox = new BoundingBox(imh);
-        int[] box = {imgBbox.xmin, imgBbox.xmax, imgBbox.ymin, imgBbox.ymax, imgBbox.zmin, imgBbox.zmax};
-        if (bbox.xmin < 0 || bbox.xmax > imgBbox.xmax || bbox.ymin < 0 || bbox.ymax > imgBbox.ymax
-                || bbox.zmin < 0 || bbox.zmax > imgBbox.zmax) {
-            Object3DInt objDilImg = new Object3DInt();
-            for (Object3DPlane p : objDil.getObject3DPlanes()) {
-                for (VoxelInt v : p.getVoxels()) {
-                    if (v.isInsideBoundingBox(box))
-                        objDilImg.addVoxel(v);
-                }
-            }
-            return(objDilImg);
-        }
-        else
-            return(objDil);
+    public void popFilterOneZ(Objects3DIntPopulation pop) {
+        pop.getObjects3DInt().removeIf(p -> (p.getObject3DPlanes().size() == 1));
+        pop.resetLabels();
     }
+    
+    /**
+     * Difference of Gaussians 
+     * Using CLIJ2
+     * @param imgCL
+     * @param sizeX1
+     * @param sizeY1
+     * @param sizeZ1
+     * @param sizeX2
+     * @param sizeY2
+     * @param sizeZ2
+     * @return imgGauss
+     */ 
+    public ClearCLBuffer DOG(ClearCLBuffer imgCL, double sizeX1, double sizeY1, double sizeZ1, double sizeX2, double sizeY2, double sizeZ2) {
+        ClearCLBuffer imgCLDOG = clij2.create(imgCL);
+        clij2.differenceOfGaussian3D(imgCL, imgCLDOG, sizeX1, sizeY1, sizeZ1, sizeX2, sizeY2, sizeZ2);
+        clij2.release(imgCL);
+        return(imgCLDOG);
+    }
+    
+    /**
+     * Remove object with size < min and size > max
+     * @param pop
+     * @param min
+     * @param max
+     */
+    public void popFilterSize(Objects3DIntPopulation pop, double min, double max) {
+        pop.getObjects3DInt().removeIf(p -> (new MeasureVolume(p).getVolumeUnit() < min) || (new MeasureVolume(p).getVolumeUnit() > max));
+        pop.resetLabels();
+    }
+    
+     /**
+     * Threshold 
+     * USING CLIJ2
+     * @param imgCL
+     * @param thMed
+     * @param fill 
+     */
+    private ClearCLBuffer threshold(ClearCLBuffer imgCL, String thMed) {
+        ClearCLBuffer imgCLBin = clij2.create(imgCL);
+        clij2.automaticThreshold(imgCL, imgCLBin, thMed);
+        return(imgCLBin);
+    }
+    
+    /**
+     * return objects population in an binary image
+     * Using CLIJ2
+     * @param imgCL
+     * @return pop
+     */
+
+    private Objects3DIntPopulation getPopFromClearBuffer(ClearCLBuffer imgCL) {
+        ClearCLBuffer output = clij2.create(imgCL);
+        clij2.connectedComponentsLabelingBox(imgCL, output);
+        ImagePlus imgLab  = clij2.pull(output);
+        clij2.release(output);
+        Objects3DIntPopulation pop = new Objects3DIntPopulation(ImageHandler.wrap(imgLab));
+        return pop;
+    }  
+    
+        
+    /**
+     * Find gene population
+     * @param imgGene
+     * @return genePop
+     */
+    public Objects3DIntPopulation findGenePop(ImagePlus imgGene) {
+        ClearCLBuffer imgCL = clij2.push(imgGene);
+        ClearCLBuffer imgCLMed = medianFilter(imgCL, 1, 1, 1);
+        clij2.release(imgCL);
+        ClearCLBuffer imgCLDOG = DOG(imgCLMed, DOGMin, DOGMin, DOGMin, DOGMax, DOGMax, DOGMax);
+        clij2.release(imgCLMed);
+        ClearCLBuffer imgCLBin = threshold(imgCLDOG, "Triangle"); 
+        clij2.release(imgCLDOG);
+        Objects3DIntPopulation genePop = getPopFromClearBuffer(imgCLBin);
+        popFilterSize(genePop, minGeneVol/pixVol, maxGeneVol/pixVol);
+        genePop.setVoxelSizeXY(cal.pixelWidth);
+        genePop.setVoxelSizeZ(cal.pixelDepth); 
+        clij2.release(imgCLBin);       
+        return(genePop);
+    }
+    
         
     /**
      * Find gene population with Stardist
      */
-    public Objects3DIntPopulation stardistGenePop(ImagePlus imgGene, Roi roi) throws IOException{
-        if (roi != null) {
-            roi.setLocation(0, 0);
-            imgGene.setRoi(roi);
-        }
+    public Objects3DIntPopulation stardistGenePop(ImagePlus imgGene) throws IOException{
+
         cal = imgGene.getCalibration();
         ClearCLBuffer imgCL = clij2.push(imgGene);
         ClearCLBuffer imgCLMed = medianFilter(imgCL, 1, 1, 1);
         clij2.release(imgCL);
         ImagePlus imgGeneMed = clij2.pull(imgCLMed);
         clij2.release(imgCLMed);
-        imgGeneMed.setCalibration(cal);
-        
+        imgGeneMed.show();
         // Go StarDist
         File starDistModelFile = new File(modelsPath+File.separator+stardistModelGenes);
         StarDist2D star = new StarDist2D(syncObject, starDistModelFile);
@@ -538,17 +611,9 @@ public class RNA_Scope_Tools {
         // label in 3D
         ImagePlus imgGeneLab = star.associateLabels();
         imgGeneLab.setCalibration(cal);
-        ImageInt label3D = ImageInt.wrap(imgGeneLab);
-        if (roi != null) {
-            roi.setLocation(0, 0);
-            clearOutSide(imgGeneLab, roi);
-        }
-        Objects3DIntPopulation genePop = new Objects3DIntPopulation(label3D);
-        Objects3DIntPopulation popFilter = new Objects3DIntPopulationComputation(genePop).getFilterSize(minGeneVol/pixVol, maxGeneVol/pixVol);
-        popFilter.resetLabels();
-        popFilter.setVoxelSizeXY(cal.pixelWidth);
-        popFilter.setVoxelSizeZ(cal.pixelDepth);
-        return(popFilter);
+        Objects3DIntPopulation genePop = new Objects3DIntPopulation(ImageInt.wrap(imgGeneLab));
+        popFilterSize(genePop, minGeneVol, maxGeneVol);
+        return(genePop);
 }
     
      
@@ -561,12 +626,9 @@ public class RNA_Scope_Tools {
             // resize to be in a stardist-friendly scale
             int width = imgNuc.getWidth();
             int height = imgNuc.getHeight();
-            float factor = 0.5f;
+            float factor = 0.25f;
             ImagePlus img = imgNuc.resize((int)(width*factor), (int)(height*factor), 1, "none");
-            IJ.run(img, "Remove Outliers", "block_radius_x=5 block_radius_y=5 standard_deviations=1 stack");
-            // Clear unfocus Z plan
-            Find_focused_slices focus = new Find_focused_slices();
-            focus.run(img);
+            IJ.run(img, "Remove Outliers", "block_radius_x=10 block_radius_y=10 standard_deviations=1 stack");
             // Go StarDist
             File starDistModelFile = new File(modelsPath+File.separator+stardistModelNucleus);
             StarDist2D star = new StarDist2D(syncObject, starDistModelFile);
@@ -577,28 +639,13 @@ public class RNA_Scope_Tools {
             // label in 3D
             ImagePlus nuclei = star.associateLabels().resize(width, height, 1, "none");
             ImageInt label3D = ImageInt.wrap(nuclei);
-            label3D.setCalibration(cal);
+            label3D.setCalibration(cal);        
             Objects3DIntPopulation nucPop = new Objects3DIntPopulation(label3D);
             System.out.println(nucPop.getNbObjects() + " nucleus detections");
-            Objects3DIntPopulation popFilter = new Objects3DIntPopulationComputation(nucPop).getFilterSize(minNucVol/pixVol, maxNucVol/pixVol);
-            popFilter.resetLabels();
-            popFilter.setVoxelSizeXY(cal.pixelWidth);
-            popFilter.setVoxelSizeZ(cal.pixelDepth);
+            popFilterOneZ(nucPop);
+            popFilterSize(nucPop, minNucVol, maxNucVol);
             flush_close(nuclei);
-            if (nucDil != 0) {
-                System.out.println("Nucleus dilatation of "+nucDil+" microns");
-                Objects3DIntPopulation dilPop = new Objects3DIntPopulation();
-                int index = 1;
-                for (Object3DInt obj : popFilter.getObjects3DInt()) {
-                    Object3DInt dilObj = dilCellObj(label3D, obj);
-                    dilObj.setLabel(index);
-                    dilPop.addObject(dilObj);
-                    index++;
-                }
-                return(dilPop);
-            }
-            else
-                return(popFilter);
+            return(nucPop);
         }
     
     
@@ -612,7 +659,7 @@ public class RNA_Scope_Tools {
         // scroll gene image and measure bg intensity in roi 
         // take roi lower intensity
         
-        ArrayList<RoiBg> intBgFound = new ArrayList<RoiBg>();
+        ArrayList<RoiBg> intBgFound = new ArrayList<>();
         for (int x = 0; x < img.getWidth() - roiBgSize; x += roiBgSize) {
             for (int y = 0; y < img.getHeight() - roiBgSize; y += roiBgSize) {
                 Roi roi = new Roi(x, y, roiBgSize, roiBgSize);
