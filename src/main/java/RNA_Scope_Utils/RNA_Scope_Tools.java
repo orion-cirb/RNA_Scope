@@ -77,9 +77,9 @@ public class RNA_Scope_Tools {
     public Object syncObject = new Object();
     public final double stardistPercentileBottom = 0.2;
     public final double stardistPercentileTop = 99.8;
-    public final double stardistProbThreshNuc = 0.70;
+    public final double stardistProbThreshNuc = 0.50;
     public final double stardistOverlayThreshNuc = 0.4;
-    public final double stardistProbThreshDots = 0.2;
+    public final double stardistProbThreshDots = 0.1;
     public final double stardistOverlayThreshDots = 0.45;
     public File modelsPath = new File(IJ.getDirectory("imagej")+File.separator+"models");
     public String stardistOutput = "Label Image"; 
@@ -398,7 +398,7 @@ public class RNA_Scope_Tools {
         // find background for geneRef
         imgGene.setRoi(roiBgGene.getRoi());
         ImagePlus imgGeneCrop = imgGene.crop("stack");
-        roiBgGene.setBgInt(findBackground(imgGeneCrop, 1,imgGeneCrop.getNSlices()));
+        roiBgGene.setBgInt(findBackground(imgGeneCrop, 1, imgGeneCrop.getNSlices()));
         flush_close(imgGeneCrop);
     }
     
@@ -461,11 +461,11 @@ public class RNA_Scope_Tools {
             if (imgGeneY == null) 
                 findBackgroundRois(imgGeneY, roiBgGeneY);
         }
-       
+        
         // For all nuclei compute parameters
         for (Object3DInt nucleusObj : nucleusPop.getObjects3DInt()) {
             float nucLabel = nucleusObj.getLabel();
-            
+           
             // calculate nucleus parameters
             double nucleusVol = new MeasureVolume(nucleusObj).getVolumeUnit();
             double nucleusGeneRefInt = new MeasureIntensity(nucleusObj, imhRef).getValueMeasurement(MeasureIntensity.INTENSITY_SUM);
@@ -770,7 +770,7 @@ public class RNA_Scope_Tools {
             if (obj.getIdObject() != 0)
                 obj.drawObject(imgDotsGeneX, 255);
         }
-        if (geneYPop.getNbObjects() == 0) {
+        if (geneYPop.getNbObjects() != 0) {
             for (Object3DInt obj : geneYPop.getObjects3DInt()) {
                 if (obj.getIdObject() != 0)
                     obj.drawObject(imgDotsGeneY, 255);

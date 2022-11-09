@@ -209,15 +209,14 @@ private BufferedWriter results;
                         System.out.println(genesInNuc+" gene Y found in nuclei");
                     }
                     
-                     
-                     // save dots segmented objects
-                    tools.saveDotsImage (imgNuc, nucleusPop, genesRefPop, genesXPop, genesYPop, outDirResults, rootName);
-                    tools.flush_close(imgNuc);
-                    
                     // write results for each cell population
                     tools.writeResults(nucleusPop, genesRefPop, genesXPop, genesYPop, imgGeneRef, imgGeneX, imgGeneY, roiGeneRef, roiGeneX, roiGeneY
                             , rootName, output_Analyze);
-                   
+                     
+                     // save dots segmented objects
+                    tools.saveDotsImage (imgNuc, nucleusPop, genesRefPop, genesXPop, genesYPop, outDirResults, rootName);
+                    
+                    tools.flush_close(imgNuc);
                     tools.flush_close(imgGeneRef);
                     tools.flush_close(imgGeneX);
                     tools.flush_close(imgGeneY);
