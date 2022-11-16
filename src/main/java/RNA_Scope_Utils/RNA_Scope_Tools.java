@@ -2,17 +2,18 @@ package RNA_Scope_Utils;
 
 
 
+import Cellpose.CellposeSegmentImgPlusAdvanced;
+import Cellpose.CellposeTaskSettings;
 import StardistOrion.StarDist2D;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Roi;
-import ij.gui.WaitForUserDialog;
 import ij.io.FileSaver;
 import ij.measure.Calibration;
+import ij.plugin.Duplicator;
 import ij.plugin.RGBStackMerge;
 import ij.plugin.ZProjector;
-import ij.process.AutoThresholder;
 import ij.process.ImageProcessor;
 import java.awt.Color;
 import java.awt.Font;
@@ -36,13 +37,8 @@ import loci.formats.FormatException;
 import loci.formats.meta.IMetadata;
 import loci.plugins.util.ImageProcessorReader;
 import mcib3d.geom.Point3DInt;
-import mcib3d.geom2.BoundingBox;
-import mcib3d.geom2.Object3DComputation;
 import mcib3d.geom2.Object3DInt;
-import mcib3d.geom2.Object3DPlane;
 import mcib3d.geom2.Objects3DIntPopulation;
-import mcib3d.geom2.Objects3DIntPopulationComputation;
-import mcib3d.geom2.VoxelInt;
 import mcib3d.geom2.measurements.MeasureIntensity;
 import mcib3d.geom2.measurements.MeasureVolume;
 import mcib3d.geom2.measurementsPopulation.MeasurePopulationColocalisation;
@@ -71,18 +67,20 @@ public class RNA_Scope_Tools {
     public double singleDotIntGeneRef = 0, singleDotIntGeneX = 0, singleDotIntGeneY = 0;
     public double calibBgGeneRef = 0, calibBgGeneX = 0, calibBgGeneY = 0;
     public double roiBgSize = 100;
-    public String stardistModelNucleus = "StandardFluo.zip";
-    public String stardistModelGenes = "pmls2.zip";
     
+    // Stardist
+    public String stardistModelGenes = "pmls2.zip";
     public Object syncObject = new Object();
     public final double stardistPercentileBottom = 0.2;
     public final double stardistPercentileTop = 99.8;
-    public final double stardistProbThreshNuc = 0.50;
-    public final double stardistOverlayThreshNuc = 0.4;
     public final double stardistProbThreshDots = 0.1;
     public final double stardistOverlayThreshDots = 0.45;
     public File modelsPath = new File(IJ.getDirectory("imagej")+File.separator+"models");
     public String stardistOutput = "Label Image"; 
+    
+    // Cellpose
+    private final String cellposeEnvDirPath = (IJ.isLinux()) ? "/opt/miniconda3/envs/cellpose" : System.getProperty("user.home")+"\\miniconda3\\envs\\CellPose";
+    
     public Calibration cal = new Calibration();
     private float pixVol = 0;
     
@@ -263,7 +261,7 @@ public class RNA_Scope_Tools {
     public String[] dialog(String[] channels) { 
         
         String[] models = findStardistModels();
-        if (!Arrays.asList(models).contains(stardistModelNucleus) || !Arrays.asList(models).contains(stardistModelGenes)) {
+        if (!Arrays.asList(models).contains(stardistModelGenes)) {
             IJ.showMessage("Error", "Missing stardist models");
             return(null);
         }
@@ -616,38 +614,37 @@ public class RNA_Scope_Tools {
         return(genePop);
 }
     
-     
-        /** Look for all nuclei
-         Do z slice by slice stardist 
-         * return nuclei population
-         */
-        public Objects3DIntPopulation stardistNucleiPop(ImagePlus imgNuc) throws IOException{
-            cal = imgNuc.getCalibration();
-            // resize to be in a stardist-friendly scale
-            int width = imgNuc.getWidth();
-            int height = imgNuc.getHeight();
-            float factor = 0.25f;
-            ImagePlus img = imgNuc.resize((int)(width*factor), (int)(height*factor), 1, "none");
-            IJ.run(img, "Remove Outliers", "block_radius_x=10 block_radius_y=10 standard_deviations=1 stack");
-            // Go StarDist
-            File starDistModelFile = new File(modelsPath+File.separator+stardistModelNucleus);
-            StarDist2D star = new StarDist2D(syncObject, starDistModelFile);
-            star.loadInput(img);
-            star.setParams(stardistPercentileBottom, stardistPercentileTop, stardistProbThreshNuc, stardistOverlayThreshNuc, stardistOutput);
-            star.run();
-            flush_close(img);
-            // label in 3D
-            ImagePlus nuclei = star.associateLabels().resize(width, height, 1, "none");
-            ImageInt label3D = ImageInt.wrap(nuclei);
-            label3D.setCalibration(cal);        
-            Objects3DIntPopulation nucPop = new Objects3DIntPopulation(label3D);
-            System.out.println(nucPop.getNbObjects() + " nucleus detections");
-            popFilterOneZ(nucPop);
-            popFilterSize(nucPop, minNucVol, maxNucVol);
-            flush_close(nuclei);
-            return(nucPop);
-        }
-    
+/**
+     * Look for all 3D cells in a Z-stack: 
+     * - apply CellPose in 2D slice by slice 
+     * - let CellPose reconstruct cells in 3D using the stitch threshold parameters
+     */
+    public Objects3DIntPopulation cellposeDetection(ImagePlus img, boolean resize, String cellposeModel, int channel, int diameter, double stitchThreshold) throws IOException{
+        float resizeFactor = 0.5f;
+        ImagePlus imgResized = (resize) ? img.resize((int)(img.getWidth()*resizeFactor), (int)(img.getHeight()*resizeFactor), 1, "none") : new Duplicator().run(img);
+
+        // Define CellPose settings
+        CellposeTaskSettings settings = new CellposeTaskSettings(cellposeModel, channel, diameter, cellposeEnvDirPath);
+        settings.setStitchThreshold(stitchThreshold);
+        settings.useGpu(true);
+       
+        // Run CellPose
+        CellposeSegmentImgPlusAdvanced cellpose = new CellposeSegmentImgPlusAdvanced(settings, imgResized);
+        ImagePlus imgOut = cellpose.run();
+        if(resize) imgOut = imgOut.resize(img.getWidth(), img.getHeight(), "none");
+        imgOut.setCalibration(cal);
+       
+        // Get cells as a population of objects
+        Objects3DIntPopulation pop = new Objects3DIntPopulation(ImageHandler.wrap(imgOut));
+        popFilterOneZ(pop);
+        System.out.println(pop.getNbObjects() + " CellPose detections");
+       
+        // Filter cells by size
+        popFilterSize(pop, minNucVol, maxNucVol);
+        System.out.println(pop.getNbObjects() + " detections remaining after size filtering");
+        flush_close(imgOut);
+        return(pop);
+    }   
     
     /**
      * Find min background roi

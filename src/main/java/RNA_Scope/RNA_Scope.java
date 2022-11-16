@@ -40,9 +40,7 @@ public class RNA_Scope implements PlugIn {
     
 private final RNA_Scope_Utils.RNA_Scope_Tools tools =  new  RNA_Scope_Utils.RNA_Scope_Tools();
 private String imageDir = "";
-private String outDirResults = "";
 private String rootName = "";
-private BufferedWriter results;
 
     @Override
     public void run(String arg) {
@@ -155,7 +153,7 @@ private BufferedWriter results;
                     int indexCh = ArrayUtils.indexOf(channels, chs[0]);
                     ImagePlus imgNuc = BF.openImagePlus(options)[indexCh];
                     // Segmente nucleus with StarDist
-                    Objects3DIntPopulation nucleusPop = tools.stardistNucleiPop(imgNuc);
+                    Objects3DIntPopulation nucleusPop = tools.cellposeDetection(imgNuc, true, "cyto2", 1, 30, 0.25);
                     System.out.println(nucleusPop.getNbObjects()+" nuclei found after size threshold");
                                                          
                    
